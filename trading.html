@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trading - Crypto Demo Trader</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .trading-wrap {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .coin-name { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .price { font-size: 30px; font-weight: bold; margin: 5px 0 5px 0; }
+    .gain { font-size: 14px; margin-bottom: 15px; font-weight: 600; }
+    .holdings { font-size: 15px; margin-bottom: 12px; line-height: 1.6; }
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    input[type="number"] {
+      padding: 8px;
+      font-size: 15px;
+      width: 100px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button.buy-btn, button.sell-btn, button.reset-btn {
+      padding: 10px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+    }
+    .buy-btn { background: #2ecc71; }
+    .sell-btn { background: #e74c3c; }
+    .reset-btn { background: #7f8c8d; margin-top: 10px; margin-bottom: 20px; }
+    .summary {
+      background: var(--summary-bg);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    #history {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    #history h3 { margin-top: 0; }
+    #historyList { font-size: 14px; padding-left: 18px; }
+    canvas { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">Crypto Demo Trader</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu">
+      <a href="index.html" data-i18n="nav_home">Home</a>
+      <a href="trading.html" data-i18n="nav_trading">Trading</a>
+      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
+      <a href="about.html" data-i18n="nav_about">About</a>
+      <div style="padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <select id="langSelect" style="width: 100%; padding: 6px; border-radius: 6px;"></select>
+      </div>
+    </div>
+  </nav>
+
+  <div class="trading-wrap">
+    <div class="summary">
+      Cash: $<span id="cash">10000</span> &nbsp;|&nbsp;
+      Total Profit/Loss: $<span id="profitLoss">0.00</span> &nbsp;|&nbsp;
+      Best Score: $<span id="bestScore">0.00</span>
+    </div>
+
+    <div id="coinCards"></div>
+
+    <button class="reset-btn" id="resetBtn">Reset Everything</button>
+
+    <div id="history">
+      <h3>Transaction History</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="nav.js"></script>
+  <script src="i18n.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
