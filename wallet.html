@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet - Crypto Demo Trader</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .wallet-box {
+      max-width: 480px;
+      margin: 50px auto;
+      padding: 0 20px;
+    }
+    .balance-card {
+      background: var(--summary-bg);
+      color: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .balance-card .amount { font-size: 36px; font-weight: 800; }
+    .balance-card .label { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+    .disclaimer {
+      background: #fff3cd;
+      color: #856404;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .wallet-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+    }
+    .wallet-card h3 { margin-top: 0; font-size: 16px; }
+    .wallet-card input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .wallet-card button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .deposit-btn { background: #2ecc71; }
+    .withdraw-btn { background: #e74c3c; }
+    #walletMsg { font-size: 13px; margin-top: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">Crypto Demo Trader</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu">
+      <a href="index.html">Home</a>
+      <a href="trading.html">Trading</a>
+      <a href="wallet.html">Wallet</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="support.html">Support</a>
+      <a href="about.html">About</a>
+    </div>
+  </nav>
+
+  <div class="wallet-box">
+    <div class="disclaimer">
+      ⚠️ This is a simulated wallet for learning purposes only. No real money, bank accounts, or payment processors are involved.
+    </div>
+
+    <div class="balance-card">
+      <div class="amount">$<span id="walletBalance">0.00</span></div>
+      <div class="label">Simulated Wallet Balance</div>
+    </div>
+
+    <div class="wallet-card">
+      <h3>Deposit (Simulated)</h3>
+      <input type="number" id="depositAmount" placeholder="Amount to deposit" min="1">
+      <button class="deposit-btn" id="depositBtn">Deposit</button>
+    </div>
+
+    <div class="wallet-card">
+      <h3>Withdraw (Simulated)</h3>
+      <input type="number" id="withdrawAmount" placeholder="Amount to withdraw" min="1">
+      <button class="withdraw-btn" id="withdrawBtn">Withdraw</button>
+    </div>
+
+    <p id="walletMsg"></p>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    const API = 'http://localhost:3000';
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'login.html';
+
+    const balanceEl = document.getElementById('walletBalance');
+    const msgEl = document.getElementById('walletMsg');
+
+    async function loadWallet() {
+      const res = await fetch(`${API}/api/data/${userId}`);
+      const data = await res.json();
+      balanceEl.textContent = (data.wallet_balance || 0).toFixed(2);
+    }
+
+    async function deposit() {
+      const amount = Number(document.getElementById('depositAmount').value);
+      msgEl.textContent = '';
+      const res = await fetch(`${API}/api/wallet/deposit/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (data.wallet_balance !== undefined) {
+        balanceEl.textContent = data.wallet_balance.toFixed(2);
+        msgEl.style.color = '#2ecc71';
+        msgEl.textContent = 'Deposit successful.';
+      } else {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = data.error || 'Something went wrong.';
+      }
+    }
+
+    async function withdraw() {
+      const amount = Number(document.getElementById('withdrawAmount').value);
+      msgEl.textContent = '';
+      const res = await fetch(`${API}/api/wallet/withdraw/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (data.wallet_balance !== undefined) {
+        balanceEl.textContent = data.wallet_balance.toFixed(2);
+        msgEl.style.color = '#2ecc71';
+        msgEl.textContent = 'Withdrawal successful.';
+      } else {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = data.error || 'Something went wrong.';
+      }
+    }
+
+    document.getElementById('depositBtn').addEventListener('click', deposit);
+    document.getElementById('withdrawBtn').addEventListener('click', withdraw);
+    loadWallet();
+  </script>
+
+</body>
+</html>

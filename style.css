@@ -52,8 +52,9 @@ nav {
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.25s ease;
+  z-index: 50;
 }
-.nav-menu.open { max-height: 300px; }
+.nav-menu.open { max-height: 400px; }
 .nav-menu a {
   color: white;
   text-decoration: none;
@@ -70,9 +71,19 @@ nav {
   justify-content: center;
   text-align: center;
   padding: 40px 20px;
-  background: linear-gradient(135deg, #1f2937, #2ecc71 150%);
+  background: linear-gradient(-45deg, #1f2937, #2ecc71, #0f766e, #1f2937);
+  background-size: 400% 400%;
+  animation: gradient-shift 12s ease infinite;
   color: white;
+  position: relative;
+  overflow: hidden;
 }
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.hero > * { position: relative; z-index: 1; }
 .hero h1 { font-size: 42px; margin-bottom: 10px; }
 .hero p { font-size: 18px; max-width: 500px; margin-bottom: 30px; opacity: 0.9; }
 .hero-btn {
@@ -275,3 +286,74 @@ nav {
 .team-card h4 { margin: 6px 0 2px 0; font-size: 16px; }
 .team-card .role { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
 .team-card p.bio { font-size: 13px; color: var(--muted); margin: 0; }
+
+.testimonials {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+.testimonials h2 { text-align: center; margin-bottom: 6px; }
+.testimonials .section-note {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 30px;
+}
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+.testimonial-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+}
+.testimonial-card .stars { color: #f5b301; margin-bottom: 10px; font-size: 15px; }
+.testimonial-card p.quote { font-size: 14px; margin: 0 0 14px 0; line-height: 1.5; }
+.testimonial-author { display: flex; align-items: center; gap: 10px; }
+.testimonial-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 14px;
+}
+.testimonial-author .name { font-size: 13px; font-weight: 600; }
+
+.faq-section {
+  max-width: 700px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+.faq-section h2 { text-align: center; margin-bottom: 30px; }
+.faq-item {
+  background: var(--card-bg);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.faq-question {
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 15px;
+}
+.faq-question .arrow { transition: transform 0.2s ease; }
+.faq-item.open .arrow { transform: rotate(180deg); }
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+  padding: 0 20px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.faq-item.open .faq-answer {
+  max-height: 200px;
+  padding-bottom: 16px;
+}

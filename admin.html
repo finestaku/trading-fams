@@ -5,15 +5,19 @@
   <title>Admin - Crypto Demo Trader</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    .admin-wrap {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
     .admin-box {
-      max-width: 500px;
-      margin: 60px auto;
-      padding: 30px;
+      padding: 24px;
       background: var(--card-bg);
       border-radius: 12px;
       box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
     }
-    .admin-box h2 { margin-top: 0; }
+    .admin-box h2, .admin-box h3 { margin-top: 0; }
     .admin-box label { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px 0; }
     .admin-box input, .admin-box textarea {
       width: 100%;
@@ -26,89 +30,167 @@
     }
     .admin-box textarea { min-height: 80px; }
     .admin-box button {
-      margin-top: 18px;
-      width: 100%;
-      padding: 12px;
+      margin-top: 14px;
+      padding: 10px 16px;
       border: none;
       border-radius: 6px;
       background: #2ecc71;
       color: white;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
     }
-    #adminMsg { font-size: 14px; margin-top: 10px; text-align: center; }
+    #adminMsg, #usersMsg { font-size: 14px; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+    .user-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .user-actions input { width: 80px; display: inline-block; }
+    .user-actions button {
+      margin-top: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+      background: #3498db;
+    }
+    .user-actions .reset-btn { background: #e67e22; }
   </style>
 </head>
 <body>
 
-  <div class="admin-box">
-    <h2>Site Admin</h2>
+  <div class="admin-wrap">
 
-    <label>Admin Password</label>
-    <input type="password" id="adminPassword" placeholder="Enter admin password">
+    <div class="admin-box">
+      <h2>Admin Password</h2>
+      <input type="password" id="adminPassword" placeholder="Enter admin password">
+      <button id="unlockBtn">Unlock Admin Tools</button>
+      <p id="adminMsg"></p>
+    </div>
 
-    <label>Hero Title</label>
-    <input type="text" id="heroTitle">
+    <div class="admin-box">
+      <h3>Homepage Hero Content</h3>
+      <label>Hero Title</label>
+      <input type="text" id="heroTitle">
+      <label>Hero Description</label>
+      <textarea id="heroDesc"></textarea>
+      <label>Hero Button Text</label>
+      <input type="text" id="heroBtn">
+      <button id="saveContentBtn">Save Homepage Content</button>
+    </div>
 
-    <label>Hero Description</label>
-    <textarea id="heroDesc"></textarea>
+    <div class="admin-box">
+      <h3>All Users</h3>
+      <button id="loadUsersBtn">Load Users</button>
+      <p id="usersMsg"></p>
+      <table id="usersTable" style="display:none;">
+        <thead>
+          <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
 
-    <label>Hero Button Text</label>
-    <input type="text" id="heroBtn">
-
-    <button id="saveBtn">Save Changes</button>
-    <p id="adminMsg"></p>
   </div>
 
   <script>
     const API = 'http://localhost:3000';
+    let adminPassword = '';
 
-    async function loadContent() {
+    document.getElementById('unlockBtn').addEventListener('click', async () => {
+      adminPassword = document.getElementById('adminPassword').value;
+      const msgEl = document.getElementById('adminMsg');
+
       try {
         const res = await fetch(`${API}/api/content`);
         const data = await res.json();
         document.getElementById('heroTitle').value = data.hero_title;
         document.getElementById('heroDesc').value = data.hero_desc;
         document.getElementById('heroBtn').value = data.hero_btn;
-      } catch (err) {
-        document.getElementById('adminMsg').textContent = 'Could not reach backend.';
-      }
-    }
-
-    async function saveContent() {
-      const msgEl = document.getElementById('adminMsg');
-      msgEl.textContent = '';
-
-      const body = {
-        password: document.getElementById('adminPassword').value,
-        hero_title: document.getElementById('heroTitle').value,
-        hero_desc: document.getElementById('heroDesc').value,
-        hero_btn: document.getElementById('heroBtn').value
-      };
-
-      try {
-        const res = await fetch(`${API}/api/content`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        if (data.success) {
-          msgEl.style.color = '#2ecc71';
-          msgEl.textContent = 'Saved! Refresh the homepage to see changes.';
-        } else {
-          msgEl.style.color = '#e74c3c';
-          msgEl.textContent = data.error || 'Something went wrong.';
-        }
+        msgEl.style.color = '#2ecc71';
+        msgEl.textContent = 'Ready. Password will be checked when you save.';
       } catch (err) {
         msgEl.style.color = '#e74c3c';
         msgEl.textContent = 'Could not reach backend.';
       }
+    });
+
+    document.getElementById('saveContentBtn').addEventListener('click', async () => {
+      const msgEl = document.getElementById('adminMsg');
+      const body = {
+        password: adminPassword,
+        hero_title: document.getElementById('heroTitle').value,
+        hero_desc: document.getElementById('heroDesc').value,
+        hero_btn: document.getElementById('heroBtn').value
+      };
+      const res = await fetch(`${API}/api/content`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl.textContent = data.success ? 'Saved!' : (data.error || 'Failed.');
+    });
+
+    document.getElementById('loadUsersBtn').addEventListener('click', async () => {
+      const msgEl = document.getElementById('usersMsg');
+      const res = await fetch(`${API}/api/admin/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+
+      if (!data.users) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = data.error || 'Failed to load users.';
+        return;
+      }
+
+      msgEl.textContent = '';
+      const tbody = document.getElementById('usersBody');
+      tbody.innerHTML = '';
+
+      data.users.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.email || '-'}</td>
+          <td>$${user.cash.toFixed(2)}</td>
+          <td>$${user.wallet_balance.toFixed(2)}</td>
+          <td class="user-actions">
+            <input type="number" placeholder="Amount" id="fundAmount-${user.id}">
+            <button onclick="addFunds(${user.id})">Add Funds</button>
+            <input type="password" placeholder="New pwd" id="newPwd-${user.id}">
+            <button class="reset-btn" onclick="resetPwd(${user.id})">Reset</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('usersTable').style.display = 'table';
+    });
+
+    async function addFunds(userId) {
+      const amount = Number(document.getElementById(`fundAmount-${userId}`).value);
+      const res = await fetch(`${API}/api/admin/add-funds`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, userId, amount })
+      });
+      const data = await res.json();
+      alert(data.success ? `Added $${amount}. New balance: $${data.newCash.toFixed(2)}` : (data.error || 'Failed'));
+      document.getElementById('loadUsersBtn').click();
     }
 
-    document.getElementById('saveBtn').addEventListener('click', saveContent);
-    loadContent();
+    async function resetPwd(userId) {
+      const newPassword = document.getElementById(`newPwd-${userId}`).value;
+      const res = await fetch(`${API}/api/admin/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, userId, newPassword })
+      });
+      const data = await res.json();
+      alert(data.success ? 'Password reset successfully.' : (data.error || 'Failed'));
+    }
   </script>
 
 </body>

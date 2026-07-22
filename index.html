@@ -2,114 +2,210 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - Crypto Demo Trader</title>
+  <title>Crypto Demo Trader</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .admin-box {
-      max-width: 500px;
-      margin: 60px auto;
-      padding: 30px;
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.15);
-    }
-    .admin-box h2 { margin-top: 0; }
-    .admin-box label { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px 0; }
-    .admin-box input, .admin-box textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-    .admin-box textarea { min-height: 80px; }
-    .admin-box button {
-      margin-top: 18px;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      background: #2ecc71;
-      color: white;
-      font-weight: 700;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    #adminMsg { font-size: 14px; margin-top: 10px; text-align: center; }
-  </style>
 </head>
 <body>
 
-  <div class="admin-box">
-    <h2>Site Admin</h2>
+  <nav>
+    <div class="logo">Crypto Demo Trader</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu">
+      <a href="index.html" data-i18n="nav_home">Home</a>
+      <a href="trading.html" data-i18n="nav_trading">Trading</a>
+      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
+      <a href="about.html" data-i18n="nav_about">About</a>
+      <div id="authSlot"></div>
+      <div style="padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <select id="langSelect" style="width: 100%; padding: 6px; border-radius: 6px;"></select>
+      </div>
+    </div>
+  </nav>
 
-    <label>Admin Password</label>
-    <input type="password" id="adminPassword" placeholder="Enter admin password">
-
-    <label>Hero Title</label>
-    <input type="text" id="heroTitle">
-
-    <label>Hero Description</label>
-    <textarea id="heroDesc"></textarea>
-
-    <label>Hero Button Text</label>
-    <input type="text" id="heroBtn">
-
-    <button id="saveBtn">Save Changes</button>
-    <p id="adminMsg"></p>
+  <div class="ticker-wrap">
+    <div class="ticker" id="tickerTrack"></div>
   </div>
 
+  <div class="hero">
+    <h1 data-i18n="hero_title">Trade Crypto. Risk Nothing.</h1>
+    <p data-i18n="hero_desc">Practice buying and selling Bitcoin, Ethereum, Solana, and Dogecoin with live prices and $10,000 in fake cash. No real money, all the experience.</p>
+    <a href="trading.html" class="hero-btn" data-i18n="hero_btn">Start Trading</a>
+  </div>
+
+  <div class="illustration-wrap">
+    <div class="coin-orbit">
+      <div class="orbit-center">📊</div>
+      <div class="orbit-coin c1">₿</div>
+      <div class="orbit-coin c2">Ξ</div>
+      <div class="orbit-coin c3">◎</div>
+      <div class="orbit-coin c4">Ð</div>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number">$<span data-count="10K">0</span></div>
+      <div class="stat-label">Starting Capital</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-count="4">0</div>
+      <div class="stat-label">Coins Supported</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-count="10s">0</div>
+      <div class="stat-label">Price Refresh Rate</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-count="8">0</div>
+      <div class="stat-label">Languages Available</div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">📈</div>
+      <h3 data-i18n="feat1_title">Live Prices</h3>
+      <p data-i18n="feat1_desc">Real-time crypto prices pulled straight from the market, updated every few seconds.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🪙</div>
+      <h3 data-i18n="feat2_title">4 Coins to Trade</h3>
+      <p data-i18n="feat2_desc">Bitcoin, Ethereum, Solana, and Dogecoin — build a diversified fake portfolio.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <h3 data-i18n="feat3_title">Zero Risk</h3>
+      <p data-i18n="feat3_desc">Trade with $10,000 in practice cash. Learn the ropes without losing a cent.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🏆</div>
+      <h3 data-i18n="feat4_title">Track Your Best</h3>
+      <p data-i18n="feat4_desc">Your highest profit is saved automatically — come back and try to beat it.</p>
+    </div>
+  </div>
+
+  <div class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-number">1</div>
+        <h4>Get $10,000 in fake cash</h4>
+        <p>No signup, no card, no real money — just click and start.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-number">2</div>
+        <h4>Buy and sell live-priced coins</h4>
+        <p>Trade Bitcoin, Ethereum, Solana, and Dogecoin at real-time prices.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-number">3</div>
+        <h4>Track your results</h4>
+        <p>Watch your profit/loss update live, and try to beat your best score.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="testimonials">
+    <h2>What People Are Saying</h2>
+    <p class="subtext">Fictional feedback for demonstration purposes</p>
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"Finally a way to practice trading without the anxiety of losing real money. The live charts feel legit."</p>
+        <div class="person">
+          <div class="testimonial-avatar" style="background:#2ecc71;">M</div>
+          <div class="person-name">Maya, beginner trader</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"I use this to test strategies before I ever touch a real exchange. Simple and surprisingly addictive."</p>
+        <div class="person">
+          <div class="testimonial-avatar" style="background:#3498db;">R</div>
+          <div class="person-name">Raj, computer science student</div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★☆</div>
+        <p class="quote">"The dark mode and live ticker make it feel like a real exchange. Would love to see more coins added."</p>
+        <div class="person">
+          <div class="testimonial-avatar" style="background:#9b59b6;">L</div>
+          <div class="person-name">Lena, hobbyist investor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-item">
+      <div class="faq-question">Is this real money? <span class="arrow">▾</span></div>
+      <div class="faq-answer">No — everyone starts with $10,000 in completely fake cash. Only the crypto prices are real, pulled live from the market.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">Do I need to sign up? <span class="arrow">▾</span></div>
+      <div class="faq-answer">You'll need a free account to save your balance and track your best score, but there's no payment or personal info required.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">Which coins can I trade? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Bitcoin, Ethereum, Solana, and Dogecoin — all with live prices refreshed every 10 seconds.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">Is my data private? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Your trading data is stored securely and tied only to your account — it's never shared or sold.</div>
+    </div>
+  </div>
+
+  <script>window.SKIP_AUTO_I18N = true;</script>
+  <script src="nav.js"></script>
+  <script src="ticker.js"></script>
+  <script src="i18n.js"></script>
   <script>
-    const API = 'http://localhost:3000';
+    document.querySelectorAll('.faq-question').forEach(q => {
+      q.addEventListener('click', () => {
+        q.parentElement.classList.toggle('open');
+      });
+    });
 
-    async function loadContent() {
-      try {
-        const res = await fetch(`${API}/api/content`);
-        const data = await res.json();
-        document.getElementById('heroTitle').value = data.hero_title;
-        document.getElementById('heroDesc').value = data.hero_desc;
-        document.getElementById('heroBtn').value = data.hero_btn;
-      } catch (err) {
-        document.getElementById('adminMsg').textContent = 'Could not reach backend.';
-      }
-    }
-
-    async function saveContent() {
-      const msgEl = document.getElementById('adminMsg');
-      msgEl.textContent = '';
-
-      const body = {
-        password: document.getElementById('adminPassword').value,
-        hero_title: document.getElementById('heroTitle').value,
-        hero_desc: document.getElementById('heroDesc').value,
-        hero_btn: document.getElementById('heroBtn').value
-      };
-
-      try {
-        const res = await fetch(`${API}/api/content`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        if (data.success) {
-          msgEl.style.color = '#2ecc71';
-          msgEl.textContent = 'Saved! Refresh the homepage to see changes.';
-        } else {
-          msgEl.style.color = '#e74c3c';
-          msgEl.textContent = data.error || 'Something went wrong.';
+    function animateCount(el) {
+      const raw = el.getAttribute('data-count');
+      const match = raw.match(/^([\d.]+)(.*)$/);
+      if (!match) { el.textContent = raw; return; }
+      const target = parseFloat(match[1]);
+      const suffix = match[2];
+      let current = 0;
+      const step = Math.max(target / 40, 0.1);
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(interval);
         }
-      } catch (err) {
-        msgEl.style.color = '#e74c3c';
-        msgEl.textContent = 'Could not reach backend.';
-      }
+        el.textContent = (Number.isInteger(target) ? Math.floor(current) : current.toFixed(1)) + suffix;
+      }, 30);
     }
 
-    document.getElementById('saveBtn').addEventListener('click', saveContent);
-    loadContent();
-  </script>
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCount(entry.target);
+          statObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
 
+    document.querySelectorAll('[data-count]').forEach(el => statObserver.observe(el));
+  </script>
+  <script>
+    fetch('http://localhost:3000/api/content')
+      .then(res => res.json())
+      .then(content => {
+        TRANSLATIONS.en.hero_title = content.hero_title;
+        TRANSLATIONS.en.hero_desc = content.hero_desc;
+        TRANSLATIONS.en.hero_btn = content.hero_btn;
+      })
+      .catch(() => console.log('Could not load site content, using defaults.'))
+      .finally(() => initLanguageSwitcher());
+  </script>
 </body>
 </html>
