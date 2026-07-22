@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wallet - Crypto Demo Trader</title>
+  <title>Wallet - Crypto Global Trade</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     .wallet-box {
-      max-width: 480px;
+      max-width: 600px;
       margin: 50px auto;
       padding: 0 20px;
     }
@@ -56,13 +57,42 @@
     }
     .deposit-btn { background: #2ecc71; }
     .withdraw-btn { background: #e74c3c; }
-    #walletMsg { font-size: 13px; margin-top: 8px; text-align: center; }
+    .save-btn { background: #3498db; }
+    #walletMsg, #addressMsg { font-size: 13px; margin-top: 8px; text-align: center; }
+
+    .company-wallet-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .company-wallet-item:last-child { border-bottom: none; }
+    .qr-box { flex-shrink: 0; background: white; padding: 6px; border-radius: 8px; }
+    .wallet-info { flex: 1; min-width: 0; }
+    .wallet-info .coin-label { font-weight: 700; font-size: 14px; }
+    .wallet-info .address-text {
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      margin-top: 4px;
+    }
+    .copy-btn {
+      background: #7f8c8d;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
 
   <nav>
-    <div class="logo">Crypto Demo Trader</div>
+    <div class="logo">Crypto Global Trade</div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
     <div class="nav-menu" id="navMenu">
       <a href="index.html">Home</a>
@@ -76,7 +106,7 @@
 
   <div class="wallet-box">
     <div class="disclaimer">
-      ⚠️ This is a simulated wallet for learning purposes only. No real money, bank accounts, or payment processors are involved.
+      ⚠️ This entire wallet is simulated for learning purposes. The addresses and QR codes below are fake and not connected to any real blockchain — do not send real cryptocurrency to them.
     </div>
 
     <div class="balance-card">
@@ -97,6 +127,19 @@
     </div>
 
     <p id="walletMsg"></p>
+
+    <div class="wallet-card">
+      <h3>Company Wallet Addresses (Demo)</h3>
+      <div id="companyWallets"></div>
+    </div>
+
+    <div class="wallet-card">
+      <h3>Your Reference Wallet Address (Demo)</h3>
+      <p style="font-size:13px; color:var(--muted); margin-top:0;">Save your own address here for reference — this is not connected to any real wallet.</p>
+      <input type="text" id="userAddress" placeholder="e.g. DEMO-BTC-yourAddressHere">
+      <button class="save-btn" id="saveAddressBtn">Save Address</button>
+      <p id="addressMsg"></p>
+    </div>
   </div>
 
   <script src="nav.js"></script>
@@ -112,6 +155,9 @@
       const res = await fetch(`${API}/api/data/${userId}`);
       const data = await res.json();
       balanceEl.textContent = (data.wallet_balance || 0).toFixed(2);
+      if (data.user_wallet_address) {
+        document.getElementById('userAddress').value = data.user_wallet_address;
+      }
     }
 
     async function deposit() {
@@ -152,9 +198,52 @@
       }
     }
 
+    async function loadCompanyWallets() {
+      const res = await fetch(`${API}/api/company-wallets`);
+      const data = await res.json();
+      const container = document.getElementById('companyWallets');
+      container.innerHTML = '';
+
+      data.wallets.forEach(wallet => {
+        const item = document.createElement('div');
+        item.className = 'company-wallet-item';
+        const qrId = `qr-${wallet.coin}`;
+        item.innerHTML = `
+          <div class="qr-box" id="${qrId}"></div>
+          <div class="wallet-info">
+            <div class="coin-label">${wallet.coin}</div>
+            <div class="address-text">${wallet.address}</div>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('${wallet.address}')">Copy Address</button>
+          </div>
+        `;
+        container.appendChild(item);
+        new QRCode(document.getElementById(qrId), {
+          text: wallet.address,
+          width: 70,
+          height: 70
+        });
+      });
+    }
+
+    async function saveAddress() {
+      const address = document.getElementById('userAddress').value;
+      const msgEl2 = document.getElementById('addressMsg');
+      const res = await fetch(`${API}/api/wallet/address/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address })
+      });
+      const data = await res.json();
+      msgEl2.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl2.textContent = data.success ? 'Address saved.' : 'Something went wrong.';
+    }
+
     document.getElementById('depositBtn').addEventListener('click', deposit);
     document.getElementById('withdrawBtn').addEventListener('click', withdraw);
+    document.getElementById('saveAddressBtn').addEventListener('click', saveAddress);
+
     loadWallet();
+    loadCompanyWallets();
   </script>
 
 </body>

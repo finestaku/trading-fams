@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - Crypto Demo Trader</title>
+  <title>Admin - Crypto Global Trade</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .admin-wrap {
-      max-width: 700px;
+      max-width: 800px;
       margin: 40px auto;
       padding: 0 20px;
     }
@@ -40,9 +40,9 @@
       font-size: 14px;
       cursor: pointer;
     }
-    #adminMsg, #usersMsg { font-size: 14px; margin-top: 10px; }
+    #adminMsg, #usersMsg, #walletsMsg { font-size: 14px; margin-top: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.08); word-break: break-all; }
     .user-actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .user-actions input { width: 80px; display: inline-block; }
     .user-actions button {
@@ -52,6 +52,10 @@
       background: #3498db;
     }
     .user-actions .reset-btn { background: #e67e22; }
+    .wallet-edit-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .wallet-edit-row .coin-tag { width: 60px; font-weight: 700; }
+    .wallet-edit-row input { flex: 1; margin: 0; }
+    .wallet-edit-row button { margin: 0; padding: 8px 14px; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -77,12 +81,19 @@
     </div>
 
     <div class="admin-box">
+      <h3>Company Wallet Addresses (Demo)</h3>
+      <p style="font-size:13px; color:var(--muted);">These are simulated addresses shown to users on the Wallet page — not real blockchain addresses.</p>
+      <div id="companyWalletsEdit"></div>
+      <p id="walletsMsg"></p>
+    </div>
+
+    <div class="admin-box">
       <h3>All Users</h3>
       <button id="loadUsersBtn">Load Users</button>
       <p id="usersMsg"></p>
       <table id="usersTable" style="display:none;">
         <thead>
-          <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>Actions</th></tr>
+          <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>User's Saved Address</th><th>Actions</th></tr>
         </thead>
         <tbody id="usersBody"></tbody>
       </table>
@@ -93,6 +104,7 @@
   <script>
     const API = 'http://localhost:3000';
     let adminPassword = '';
+    const COINS = ['BTC', 'ETH', 'SOL', 'DOGE'];
 
     document.getElementById('unlockBtn').addEventListener('click', async () => {
       adminPassword = document.getElementById('adminPassword').value;
@@ -106,6 +118,7 @@
         document.getElementById('heroBtn').value = data.hero_btn;
         msgEl.style.color = '#2ecc71';
         msgEl.textContent = 'Ready. Password will be checked when you save.';
+        loadCompanyWalletsForEditing();
       } catch (err) {
         msgEl.style.color = '#e74c3c';
         msgEl.textContent = 'Could not reach backend.';
@@ -129,6 +142,38 @@
       msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
       msgEl.textContent = data.success ? 'Saved!' : (data.error || 'Failed.');
     });
+
+    async function loadCompanyWalletsForEditing() {
+      const res = await fetch(`${API}/api/company-wallets`);
+      const data = await res.json();
+      const container = document.getElementById('companyWalletsEdit');
+      container.innerHTML = '';
+
+      COINS.forEach(coin => {
+        const existing = data.wallets.find(w => w.coin === coin);
+        const row = document.createElement('div');
+        row.className = 'wallet-edit-row';
+        row.innerHTML = `
+          <span class="coin-tag">${coin}</span>
+          <input type="text" id="wallet-${coin}" value="${existing ? existing.address : ''}" placeholder="Demo address for ${coin}">
+          <button onclick="saveCompanyWallet('${coin}')">Save</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    async function saveCompanyWallet(coin) {
+      const address = document.getElementById(`wallet-${coin}`).value;
+      const msgEl = document.getElementById('walletsMsg');
+      const res = await fetch(`${API}/api/admin/company-wallets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, coin, address })
+      });
+      const data = await res.json();
+      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl.textContent = data.success ? `${coin} address updated.` : (data.error || 'Failed.');
+    }
 
     document.getElementById('loadUsersBtn').addEventListener('click', async () => {
       const msgEl = document.getElementById('usersMsg');
@@ -156,6 +201,7 @@
           <td>${user.email || '-'}</td>
           <td>$${user.cash.toFixed(2)}</td>
           <td>$${user.wallet_balance.toFixed(2)}</td>
+          <td>${user.user_wallet_address || '-'}</td>
           <td class="user-actions">
             <input type="number" placeholder="Amount" id="fundAmount-${user.id}">
             <button onclick="addFunds(${user.id})">Add Funds</button>
