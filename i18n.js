@@ -2,7 +2,7 @@ const TRANSLATIONS = {
   en: {
     nav_home: "Home", nav_trading: "Trading", nav_leaderboard: "Leaderboard", nav_about: "About",
     hero_title: "Trade Crypto. Risk Nothing.",
-    hero_desc: "Practice buying and selling Bitcoin, Ethereum, Solana, and Dogecoin with live prices and $10,000 in Real  cash. No real money, all the experience.",
+    hero_desc: "Practice buying and selling Bitcoin, Ethereum, Solana, and Dogecoin with live prices and $10,000 in Real  cash. No real money, all the experience.",
     hero_btn: "Start Trading",
     feat1_title: "Live Prices", feat1_desc: "Real-time crypto prices pulled straight from the market, updated every few seconds.",
     feat2_title: "4 Coins to Trade", feat2_desc: "Bitcoin, Ethereum, Solana, and Dogecoin — build a diversified fake portfolio.",
@@ -101,6 +101,22 @@ const TRANSLATIONS = {
     leaderboard_desc: "هذا أعلى ربح وصلت إليه أثناء التداول. تفوّق عليه في صفحة التداول!",
     lang_label: "اللغة"
   },
+  fa: {
+    nav_home: "خانه", nav_trading: "معامله", nav_leaderboard: "جدول برترین‌ها", nav_about: "درباره",
+    hero_title: "ارز دیجیتال معامله کنید. بدون هیچ ریسکی.",
+    hero_desc: "خرید و فروش بیت‌کوین، اتریوم، سولانا و دوج‌کوین را با قیمت‌های لحظه‌ای و ۱۰,۰۰۰ دلار پول مجازی تمرین کنید. بدون پول واقعی، با تمام تجربه‌ی واقعی.",
+    hero_btn: "شروع معامله",
+    feat1_title: "قیمت‌های لحظه‌ای", feat1_desc: "قیمت‌های لحظه‌ای ارز دیجیتال مستقیم از بازار، هر چند ثانیه به‌روزرسانی می‌شود.",
+    feat2_title: "۴ ارز برای معامله", feat2_desc: "بیت‌کوین، اتریوم، سولانا و دوج‌کوین — یک سبد سرمایه‌گذاری مجازی متنوع بسازید.",
+    feat3_title: "ریسک صفر", feat3_desc: "با ۱۰,۰۰۰ دلار پول تمرینی معامله کنید. بدون از دست دادن حتی یک سنت یاد بگیرید.",
+    feat4_title: "بهترین رکورد خود را دنبال کنید", feat4_desc: "بالاترین سود شما به‌طور خودکار ذخیره می‌شود — برگردید و آن را بشکنید.",
+    about_title: "درباره‌ی این پروژه",
+    about_p1: "این یک اپلیکیشن نمایشی معامله ارز دیجیتال است که برای تمرین مهارت‌های واقعی توسعه وب ساخته شده: داده‌های زنده API، دستکاری DOM، نمودارها و ذخیره‌سازی محلی.",
+    about_p2: "هیچ پول واقعی هرگز استفاده نمی‌شود. قیمت‌ها به‌صورت زنده از CoinGecko گرفته می‌شوند، اما تمام معاملات با پول اولیه مجازی انجام می‌شود.",
+    leaderboard_title: "بهترین امتیاز شما",
+    leaderboard_desc: "این بالاترین سودی است که در معامله به آن رسیده‌اید. آن را در صفحه معامله بشکنید!",
+    lang_label: "زبان"
+  },
   zh: {
     nav_home: "首页", nav_trading: "交易", nav_leaderboard: "排行榜", nav_about: "关于",
     hero_title: "交易加密货币，零风险。",
@@ -137,8 +153,10 @@ const TRANSLATIONS = {
 
 const LANG_NAMES = {
   en: "English", es: "Español", fr: "Français", de: "Deutsch",
-  pt: "Português", ar: "العربية", zh: "中文", hi: "हिन्दी"
+  pt: "Português", ar: "العربية", fa: "فارسی", zh: "中文", hi: "हिन्दी"
 };
+
+const RTL_LANGS = ["ar", "fa"];
 
 function applyTranslations(lang) {
   const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -146,13 +164,14 @@ function applyTranslations(lang) {
     const key = el.getAttribute('data-i18n');
     if (dict[key]) el.textContent = dict[key];
   });
-  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('dir', RTL_LANGS.includes(lang) ? 'rtl' : 'ltr');
 }
 
 function initLanguageSwitcher() {
   const select = document.getElementById('langSelect');
   if (!select) return;
 
+  select.innerHTML = '';
   Object.keys(LANG_NAMES).forEach(code => {
     const opt = document.createElement('option');
     opt.value = code;

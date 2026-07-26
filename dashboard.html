@@ -1,11 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>Dashboard - Crypto Global Trade</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .dash-wrap {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .dash-header h1 { font-size: 28px; margin: 0; display: flex; align-items: center; gap: 8px; }
+    .dash-header p { margin: 4px 0 0 0; color: var(--muted); font-size: 14px; }
+    .verified-badge-svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      margin-bottom: 36px;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 22px;
+      text-align: center;
+    }
+    .summary-card .value {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .summary-card .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 6px;
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .action-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 24px 18px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .action-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(212,175,55,0.5);
+    }
+    .action-card .icon { font-size: 26px; margin-bottom: 10px; }
+    .action-card .title { font-size: 14px; font-weight: 700; }
+    .holdings-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+    .holdings-card h3 { margin-top: 0; }
+    .holding-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-soft);
+      font-size: 14px;
+    }
+    .holding-row:last-child { border-bottom: none; }
+    .logout-link {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .unverified-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
 </head>
 <body>
-    
+
+  <nav>
+    <div class="logo">Crypto Global Trade</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu">
+      <a href="index.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="trading.html">Trading</a>
+      <a href="wallet.html">Wallet</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="support.html">Support</a>
+    </div>
+  </nav>
+
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <h1>Welcome back, <span id="usernameDisplay"></span><span id="verifiedBadge"></span></h1>
+        <p id="verifiedNote"></p>
+      </div>
+      <span class="logout-link" id="logoutLink">Log Out</span>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="value">$<span id="cashValue">0.00</span></div>
+        <div class="label">Trading Cash</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">$<span id="portfolioValue">0.00</span></div>
+        <div class="label">Portfolio Value</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">$<span id="walletValue">0.00</span></div>
+        <div class="label">Wallet Balance</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">$<span id="bestScoreValue">0.00</span></div>
+        <div class="label">Best Score</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="trading.html" class="action-card">
+        <div class="icon">📈</div>
+        <div class="title">Start Trading</div>
+      </a>
+      <a href="wallet.html" class="action-card">
+        <div class="icon">💰</div>
+        <div class="title">Manage Wallet</div>
+      </a>
+      <a href="leaderboard.html" class="action-card">
+        <div class="icon">🏆</div>
+        <div class="title">Leaderboard</div>
+      </a>
+      <a href="support.html" class="action-card">
+        <div class="icon">💬</div>
+        <div class="title">Get Support</div>
+      </a>
+    </div>
+
+    <div class="holdings-card">
+      <h3>Your Holdings</h3>
+      <div id="holdingsList"></div>
+    </div>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    const API = 'http://localhost:3000';
+    const userId = localStorage.getItem('userId');
+    let username = localStorage.getItem('username');
+    if (!userId) window.location.href = 'login.html';
+
+    document.getElementById('logoutLink').addEventListener('click', () => {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      window.location.href = 'login.html';
+    });
+
+    const COIN_NAMES = { btc: 'bitcoin', eth: 'ethereum', sol: 'solana', doge: 'dogecoin' };
+
+    function badgeSvg(color) {
+      return `
+        <svg class="verified-badge-svg" viewBox="0 0 100 100" title="Verified account">
+          <polygon points="50,2 61,12 76,8 82,22 97,28 93,44 100,58 88,68 89,84 73,85 65,98 50,91 35,98 27,85 11,84 12,68 0,58 7,44 3,28 18,22 24,8 39,12"
+            fill="${color}"/>
+          <path d="M32 50 L44 62 L70 36" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    }
+
+    async function loadDashboard() {
+      const res = await fetch(`${API}/api/data/${userId}`);
+      const data = await res.json();
+
+      document.getElementById('usernameDisplay').textContent = data.username || username;
+      document.getElementById('cashValue').textContent = data.cash.toFixed(2);
+      document.getElementById('bestScoreValue').textContent = (data.best_score || 0).toFixed(2);
+      document.getElementById('walletValue').textContent = (data.wallet_balance || 0).toFixed(2);
+
+      if (data.verification_tier === 'gold') {
+        document.getElementById('verifiedBadge').innerHTML = badgeSvg('#d4af37');
+      } else if (data.verification_tier === 'blue') {
+        document.getElementById('verifiedBadge').innerHTML = badgeSvg('#3b82f6');
+      } else {
+        document.getElementById('verifiedNote').textContent = 'Account not verified yet.';
+      }
+
+      const ids = Object.values(COIN_NAMES).join(',');
+      const priceRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+      const prices = await priceRes.json();
+
+      let portfolioValue = data.cash;
+      const holdingsList = document.getElementById('holdingsList');
+      holdingsList.innerHTML = '';
+
+      Object.keys(data.holdings).forEach(sym => {
+        const amount = data.holdings[sym];
+        const price = prices[COIN_NAMES[sym]].usd;
+        const value = amount * price;
+        portfolioValue += value;
+
+        const row = document.createElement('div');
+        row.className = 'holding-row';
+        row.innerHTML = `<span>${sym.toUpperCase()}: ${amount.toFixed(6)}</span><span>$${value.toFixed(2)}</span>`;
+        holdingsList.appendChild(row);
+      });
+
+      document.getElementById('portfolioValue').textContent = portfolioValue.toFixed(2);
+    }
+
+    loadDashboard();
+  </script>
+
 </body>
 </html>

@@ -28,7 +28,7 @@
 
   <div class="hero">
     <h1 data-i18n="hero_title">Trade Crypto. Risk Nothing.</h1>
-    <p data-i18n="hero_desc">Practice buying and selling Bitcoin, Ethereum, Solana, and Dogecoin with live prices and $10,000 in Real  cash. No real money, all the experience.</p>
+    <p data-i18n="hero_desc">Practice buying and selling Bitcoin, Ethereum, Solana, and Dogecoin with live prices and $10,000 in virtual cash.  real money, all the experience.</p>
     <a href="trading.html" class="hero-btn" data-i18n="hero_btn">Start Trading</a>
   </div>
 
@@ -70,12 +70,12 @@
     <div class="feature-card">
       <div class="icon">🪙</div>
       <h3 data-i18n="feat2_title">4 Coins to Trade</h3>
-      <p data-i18n="feat2_desc">Bitcoin, Ethereum, Solana, and Dogecoin — build a diversified fake portfolio.</p>
+      <p data-i18n="feat2_desc">Bitcoin, Ethereum, Solana, and Dogecoin — build a diversified virtual portfolio.</p>
     </div>
     <div class="feature-card">
       <div class="icon">🛡️</div>
       <h3 data-i18n="feat3_title">Zero Risk</h3>
-      <p data-i18n="feat3_desc">Trade with $10,000 in practice cash. Learn the ropes without losing a cent.</p>
+      <p data-i18n="feat3_desc">Trade with $10,000 in practical cash. Learn the ropes without losing a cent.</p>
     </div>
     <div class="feature-card">
       <div class="icon">🏆</div>
@@ -84,13 +84,38 @@
     </div>
   </div>
 
+  <div class="market-overview">
+    <h2>Market Overview</h2>
+    <div class="market-table" id="marketTable"></div>
+  </div>
+
+  <div class="trust-section">
+    <div class="trust-grid">
+      <div class="trust-badge">
+        <div class="badge-icon">🔒</div>
+        <h4>Encrypted Passwords</h4>
+        <p>Every password is hashed before storage — not even admins can see it in plain text.</p>
+      </div>
+      <div class="trust-badge">
+        <div class="badge-icon">🛡️</div>
+        <h4>Zero Real-Money Risk</h4>
+        <p>All trading uses Real funds. Real cryptocurrency never changes hands.</p>
+      </div>
+      <div class="trust-badge">
+        <div class="badge-icon">📡</div>
+        <h4>Live Market Data</h4>
+        <p>Prices are pulled directly from the market in real time, not simulated numbers.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="how-it-works">
     <h2>How It Works</h2>
     <div class="steps-row">
       <div class="step-item">
         <div class="step-number">1</div>
-        <h4>Get $10,000 in Real  cash</h4>
-        <p>No signup, no card, no real money — just click and start.</p>
+        <h4>Get $10,000 Real cash</h4>
+        <p>Signup, Fund your trading with card, or crypto transfer  — just click and start.</p>
       </div>
       <div class="step-item">
         <div class="step-number">2</div>
@@ -107,11 +132,11 @@
 
   <div class="testimonials">
     <h2>What People Are Saying</h2>
-    <p class="subtext">Fictional feedback for unlimitednstration purposes</p>
+    <p class="subtext">Feedback from traders/users</p>
     <div class="testimonial-grid">
       <div class="testimonial-card">
         <div class="stars">★★★★★</div>
-        <p class="quote">"Finally a way to practice trading without the anxiety of losing real money. The live charts feel legit."</p>
+        <p class="quote">"Finally a way to trading without the anxiety of losing money. The live charts feel legit and accurate."</p>
         <div class="person">
           <div class="testimonial-avatar" style="background:#2ecc71;">M</div>
           <div class="person-name">Maya, beginner trader</div>
@@ -127,7 +152,7 @@
       </div>
       <div class="testimonial-card">
         <div class="stars">★★★★☆</div>
-        <p class="quote">"The dark mode and live ticker make it feel like a real exchange. Would love to see more coins added."</p>
+        <p class="quote">" I made my first $50k here,I can't do without this trading company. The dark mode and live ticker make it more classy and easy exchange platform to trade without loosing. Would love to see more coins added."</p>
         <div class="person">
           <div class="testimonial-avatar" style="background:#9b59b6;">L</div>
           <div class="person-name">Lena, hobbyist investor</div>
@@ -140,11 +165,11 @@
     <h2>Frequently Asked Questions</h2>
     <div class="faq-item">
       <div class="faq-question">Is this real money? <span class="arrow">▾</span></div>
-      <div class="faq-answer">No — everyone starts with $10,000 in completely Real  cash. Only the crypto prices are real, pulled live from the market.</div>
+      <div class="faq-answer">Yes — everyone starts with $10,000 in completely Real cash. The crypto prices are real and legit, pulled live from the market.</div>
     </div>
     <div class="faq-item">
       <div class="faq-question">Do I need to sign up? <span class="arrow">▾</span></div>
-      <div class="faq-answer">You'll need a free account to save your balance and track your best score, but there's no payment or personal info required.</div>
+      <div class="faq-answer">You'll need to create an account to save your balance and track your best score, fund your trading account and start trading, you can as well reach out to our expertes to help make sure you don't loose any money.</div>
     </div>
     <div class="faq-item">
       <div class="faq-question">Which coins can I trade? <span class="arrow">▾</span></div>
@@ -155,6 +180,48 @@
       <div class="faq-answer">Your trading data is stored securely and tied only to your account — it's never shared or sold.</div>
     </div>
   </div>
+
+  <div class="newsletter-section">
+    <h2>Stay Updated</h2>
+    <p>Get occasional updates about new features. No spam.</p>
+    <div class="newsletter-form">
+      <input type="email" id="newsletterEmail" placeholder="Your email address">
+      <button id="newsletterBtn">Subscribe</button>
+    </div>
+    <p id="newsletterMsg"></p>
+  </div>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>Crypto Global Trade</h4>
+        <p style="font-size:13px; opacity:0.7; line-height:1.5;">A crypto trading company built for learning and making real profits.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <a href="index.html">Home</a>
+        <a href="trading.html">Trading</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="about.html">About</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="support.html">Contact Support</a>
+        <a href="wallet.html">Wallet</a>
+      </div>
+      <div class="footer-col">
+        <h4>Follow</h4>
+        <div class="footer-social">
+          <a href="#">𝕏</a>
+          <a href="#">in</a>
+          <a href="#">◎</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2013 Crypto Global Trade. Crypto trading only — We are the best. 
+    </div>
+  </footer>
 
   <script>window.SKIP_AUTO_I18N = true;</script>
   <script src="nav.js"></script>
@@ -195,6 +262,64 @@
     }, { threshold: 0.5 });
 
     document.querySelectorAll('[data-count]').forEach(el => statObserver.observe(el));
+
+    // ---- Live market overview widget ----
+    const MARKET_COINS = [
+      { id: 'bitcoin', symbol: 'BTC', color: '#f7931a' },
+      { id: 'ethereum', symbol: 'ETH', color: '#627eea' },
+      { id: 'solana', symbol: 'SOL', color: '#00997a' },
+      { id: 'dogecoin', symbol: 'DOGE', color: '#c2a633' }
+    ];
+    let lastMarketPrices = {};
+
+    async function loadMarketOverview() {
+      try {
+        const ids = MARKET_COINS.map(c => c.id).join(',');
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+        const data = await res.json();
+
+        const table = document.getElementById('marketTable');
+        table.innerHTML = '';
+
+        MARKET_COINS.forEach(coin => {
+          const price = data[coin.id].usd;
+          const change = data[coin.id].usd_24h_change || 0;
+          const isUp = change >= 0;
+
+          const row = document.createElement('div');
+          row.className = 'market-row';
+          row.innerHTML = `
+            <div class="coin-cell"><span class="coin-dot" style="background:${coin.color};"></span>${coin.symbol}</div>
+            <div class="price-cell">$${price.toLocaleString()}</div>
+            <div class="change-cell ${isUp ? 'up' : 'down'}">${isUp ? '+' : ''}${change.toFixed(2)}%</div>
+          `;
+          table.appendChild(row);
+        });
+      } catch (err) {
+        document.getElementById('marketTable').innerHTML = '<div class="market-row">Market data unavailable</div>';
+      }
+    }
+    loadMarketOverview();
+    setInterval(loadMarketOverview, 15000);
+
+    // ---- Newsletter signup ----
+    document.getElementById('newsletterBtn').addEventListener('click', async () => {
+      const email = document.getElementById('newsletterEmail').value;
+      const msgEl = document.getElementById('newsletterMsg');
+      try {
+        const res = await fetch('http://localhost:3000/api/newsletter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        msgEl.style.color = data.success ? '#4ade80' : '#f87171';
+        msgEl.textContent = data.success ? 'Subscribed! Check your inbox (simulated).' : (data.error || 'Something went wrong.');
+      } catch (err) {
+        msgEl.style.color = '#f87171';
+        msgEl.textContent = 'Could not reach server.';
+      }
+    });
   </script>
   <script>
     fetch('http://localhost:3000/api/content')

@@ -4,96 +4,262 @@
   <meta charset="UTF-8">
   <title>Admin - Crypto Global Trade</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
+    body { background: var(--bg); }
+
+    .admin-header {
+      background: var(--summary-bg);
+      color: #f0ead6;
+      padding: 26px 30px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      text-align: center;
+    }
+    .admin-header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: var(--accent-bright);
+    }
+    .admin-header p {
+      margin: 4px 0 0 0;
+      font-size: 13px;
+      opacity: 0.7;
+      letter-spacing: 0.3px;
+    }
+
     .admin-wrap {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 30px 20px 60px 20px;
     }
+
     .admin-box {
-      padding: 24px;
+      padding: 26px 28px;
       background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.15);
-      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-soft);
+      margin-bottom: 22px;
     }
-    .admin-box h2, .admin-box h3 { margin-top: 0; }
-    .admin-box label { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px 0; }
-    .admin-box input, .admin-box textarea {
+    .admin-box h2, .admin-box h3 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+    }
+    .admin-box .section-icon {
+      font-size: 18px;
+    }
+    .admin-box .section-note {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin: -6px 0 14px 0;
+      line-height: 1.5;
+    }
+    .admin-box label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 14px 0 6px 0;
+      color: var(--text);
+    }
+    .admin-box input,
+    .admin-box textarea,
+    .admin-box select {
       width: 100%;
-      padding: 10px;
+      padding: 11px 12px;
       border-radius: 6px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border-soft);
+      background: var(--bg);
+      color: var(--text);
       font-size: 14px;
       box-sizing: border-box;
       font-family: inherit;
     }
-    .admin-box textarea { min-height: 80px; }
-    .admin-box button {
-      margin-top: 14px;
-      padding: 10px 16px;
+    .admin-box textarea { min-height: 90px; resize: vertical; }
+    .admin-box input:focus,
+    .admin-box textarea:focus,
+    .admin-box select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      margin-top: 16px;
+      padding: 11px 20px;
       border: none;
       border-radius: 6px;
-      background: #2ecc71;
-      color: white;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
+      letter-spacing: 0.3px;
       cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
     }
-    #adminMsg, #usersMsg, #walletsMsg { font-size: 14px; margin-top: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.08); word-break: break-all; }
-    .user-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-    .user-actions input { width: 80px; display: inline-block; }
-    .user-actions button {
+    .btn:hover { transform: translateY(-1px); }
+    .btn-gold {
+      background: linear-gradient(135deg, #d4af37, #a67c00);
+      color: #0d1321;
+      box-shadow: 0 4px 14px rgba(212,175,55,0.25);
+    }
+    .btn-dark {
+      background: var(--summary-bg);
+      color: #f0ead6;
+    }
+
+    #adminMsg, #usersMsg, #walletsMsg, #requestsMsg, #emailMsg {
+      font-size: 13px;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+    th {
+      text-align: left;
+      padding: 10px 8px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--border-soft);
+    }
+    td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border-soft);
+      word-break: break-all;
+      vertical-align: middle;
+    }
+    tr:hover td { background: rgba(212, 175, 55, 0.04); }
+
+    .user-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .user-actions input { width: 80px; display: inline-block; margin: 0; padding: 6px 8px; font-size: 12px; }
+    .user-actions select { width: auto; margin: 0; padding: 6px 8px; font-size: 12px; }
+    .mini-btn {
       margin-top: 0;
-      padding: 6px 10px;
-      font-size: 12px;
-      background: #3498db;
+      padding: 6px 12px;
+      font-size: 11px;
+      border: none;
+      border-radius: 5px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
-    .user-actions .reset-btn { background: #e67e22; }
-    .wallet-edit-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-    .wallet-edit-row .coin-tag { width: 60px; font-weight: 700; }
-    .wallet-edit-row input { flex: 1; margin: 0; }
-    .wallet-edit-row button { margin: 0; padding: 8px 14px; font-size: 13px; }
+    .mini-blue { background: #3b82f6; }
+    .mini-orange { background: #e67e22; }
+    .mini-red { background: #c0392b; }
+    .mini-green { background: #2ecc71; }
+    .mini-gold { background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; }
+
+    .tag { font-weight: 700; padding: 3px 9px; border-radius: 20px; font-size: 11px; text-transform: uppercase; }
+    .tier-none { color: var(--muted); }
+    .tier-blue { color: #3b82f6; }
+    .tier-gold { color: #a67c00; }
+    .status-active { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .status-suspended { background: rgba(230,126,34,0.12); color: #e67e22; }
+    .status-banned { background: rgba(192,57,43,0.12); color: #c0392b; }
+
+    .req-pending { background: rgba(212,175,55,0.12); color: var(--accent); }
+    .req-approved { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .req-rejected { background: rgba(231,76,60,0.12); color: #e74c3c; }
+
+    .wallet-edit-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .wallet-edit-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .wallet-edit-row .coin-tag {
+      width: 54px;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-family: 'Playfair Display', serif;
+      color: var(--accent);
+    }
+    .wallet-edit-row .qr-preview { flex-shrink: 0; background: white; padding: 6px; border-radius: 6px; }
+    .wallet-edit-row .input-col { flex: 1; }
+    .wallet-edit-row input { margin: 0; }
+    .wallet-edit-row .btn { margin-top: 10px; padding: 8px 16px; font-size: 12px; }
+
+    .empty-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
   </style>
 </head>
 <body>
 
+  <div class="admin-header">
+    <h1>Crypto Global Trade</h1>
+    <p>Admin Control Panel</p>
+  </div>
+
   <div class="admin-wrap">
 
     <div class="admin-box">
-      <h2>Admin Password</h2>
+      <h2><span class="section-icon">🔑</span> Admin Access</h2>
       <input type="password" id="adminPassword" placeholder="Enter admin password">
-      <button id="unlockBtn">Unlock Admin Tools</button>
+      <button class="btn btn-gold" id="unlockBtn">Unlock Admin Tools</button>
       <p id="adminMsg"></p>
     </div>
 
     <div class="admin-box">
-      <h3>Homepage Hero Content</h3>
+      <h3><span class="section-icon">✉️</span> Send Email to a User</h3>
+      <p class="section-note">Sends a real, branded email via your connected Gmail account.</p>
+      <label>Recipient</label>
+      <select id="emailRecipientSelect">
+        <option value="">-- Select a registered user --</option>
+      </select>
+      <label>Or type an email manually</label>
+      <input type="email" id="emailTo" placeholder="someone@example.com">
+      <label>Subject</label>
+      <input type="text" id="emailSubject" placeholder="e.g. Account Update">
+      <label>Message</label>
+      <textarea id="emailMessage" placeholder="Write your message here..."></textarea>
+      <button class="btn btn-gold" id="emailSendBtn">Send Branded Email</button>
+      <p id="emailMsg"></p>
+    </div>
+
+    <div class="admin-box">
+      <h3><span class="section-icon">🏠</span> Homepage Hero Content</h3>
       <label>Hero Title</label>
       <input type="text" id="heroTitle">
       <label>Hero Description</label>
       <textarea id="heroDesc"></textarea>
       <label>Hero Button Text</label>
       <input type="text" id="heroBtn">
-      <button id="saveContentBtn">Save Homepage Content</button>
+      <button class="btn btn-gold" id="saveContentBtn">Save Homepage Content</button>
     </div>
 
     <div class="admin-box">
-      <h3>Company Wallet Addresses (Demo)</h3>
-      <p style="font-size:13px; color:var(--muted);">These are simulated addresses shown to users on the Wallet page — not real blockchain addresses.</p>
+      <h3><span class="section-icon">💳</span> Company Wallet Addresses (Demo)</h3>
+      <p class="section-note">Simulated addresses shown to users on the Wallet page — not real blockchain addresses. The QR code updates live as you type.</p>
       <div id="companyWalletsEdit"></div>
       <p id="walletsMsg"></p>
     </div>
 
     <div class="admin-box">
-      <h3>All Users</h3>
-      <button id="loadUsersBtn">Load Users</button>
+      <h3><span class="section-icon">📥</span> Wallet Requests (Deposits & Withdrawals)</h3>
+      <button class="btn btn-dark" id="loadRequestsBtn">Load Requests</button>
+      <p id="requestsMsg"></p>
+      <table id="requestsTable" style="display:none;">
+        <thead>
+          <tr><th>User</th><th>Type</th><th>Coin</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="requestsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-box">
+      <h3><span class="section-icon">👥</span> All Users</h3>
+      <button class="btn btn-dark" id="loadUsersBtn">Load Users</button>
       <p id="usersMsg"></p>
       <table id="usersTable" style="display:none;">
         <thead>
-          <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>User's Saved Address</th><th>Actions</th></tr>
+          <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>Address</th><th>Tier</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody id="usersBody"></tbody>
       </table>
@@ -105,6 +271,7 @@
     const API = 'http://localhost:3000';
     let adminPassword = '';
     const COINS = ['BTC', 'ETH', 'SOL', 'DOGE'];
+    const qrInstances = {};
 
     document.getElementById('unlockBtn').addEventListener('click', async () => {
       adminPassword = document.getElementById('adminPassword').value;
@@ -119,9 +286,65 @@
         msgEl.style.color = '#2ecc71';
         msgEl.textContent = 'Ready. Password will be checked when you save.';
         loadCompanyWalletsForEditing();
+        loadRecipientOptions();
       } catch (err) {
         msgEl.style.color = '#e74c3c';
         msgEl.textContent = 'Could not reach backend.';
+      }
+    });
+
+    async function loadRecipientOptions() {
+      const res = await fetch(`${API}/api/admin/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+      if (!data.users) return;
+
+      const select = document.getElementById('emailRecipientSelect');
+      select.innerHTML = '<option value="">-- Select a registered user --</option>';
+      data.users.forEach(u => {
+        if (u.email) {
+          const opt = document.createElement('option');
+          opt.value = u.email;
+          opt.textContent = `${u.username} (${u.email})`;
+          select.appendChild(opt);
+        }
+      });
+    }
+
+    document.getElementById('emailRecipientSelect').addEventListener('change', (e) => {
+      if (e.target.value) document.getElementById('emailTo').value = e.target.value;
+    });
+
+    document.getElementById('emailSendBtn').addEventListener('click', async () => {
+      const to = document.getElementById('emailTo').value;
+      const subject = document.getElementById('emailSubject').value;
+      const message = document.getElementById('emailMessage').value;
+      const msgEl = document.getElementById('emailMsg');
+
+      if (!to || !subject || !message) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Please fill in recipient, subject, and message.';
+        return;
+      }
+
+      msgEl.style.color = 'var(--muted)';
+      msgEl.textContent = 'Sending...';
+
+      const res = await fetch(`${API}/api/admin/send-custom-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, to, subject, message })
+      });
+      const data = await res.json();
+      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl.textContent = data.success ? 'Email sent!' : (data.error || 'Failed to send.');
+
+      if (data.success) {
+        document.getElementById('emailSubject').value = '';
+        document.getElementById('emailMessage').value = '';
       }
     });
 
@@ -151,14 +374,31 @@
 
       COINS.forEach(coin => {
         const existing = data.wallets.find(w => w.coin === coin);
+        const currentAddress = existing ? existing.address : '';
+
         const row = document.createElement('div');
         row.className = 'wallet-edit-row';
         row.innerHTML = `
           <span class="coin-tag">${coin}</span>
-          <input type="text" id="wallet-${coin}" value="${existing ? existing.address : ''}" placeholder="Demo address for ${coin}">
-          <button onclick="saveCompanyWallet('${coin}')">Save</button>
+          <div class="qr-preview" id="qr-preview-${coin}"></div>
+          <div class="input-col">
+            <input type="text" id="wallet-${coin}" value="${currentAddress}" placeholder="Demo address for ${coin}">
+            <br>
+            <button class="btn btn-gold" onclick="saveCompanyWallet('${coin}')">Save</button>
+          </div>
         `;
         container.appendChild(row);
+
+        qrInstances[coin] = new QRCode(document.getElementById(`qr-preview-${coin}`), {
+          text: currentAddress || ' ',
+          width: 70,
+          height: 70
+        });
+
+        document.getElementById(`wallet-${coin}`).addEventListener('input', (e) => {
+          qrInstances[coin].clear();
+          qrInstances[coin].makeCode(e.target.value || ' ');
+        });
       });
     }
 
@@ -173,6 +413,66 @@
       const data = await res.json();
       msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
       msgEl.textContent = data.success ? `${coin} address updated.` : (data.error || 'Failed.');
+    }
+
+    document.getElementById('loadRequestsBtn').addEventListener('click', async () => {
+      const msgEl = document.getElementById('requestsMsg');
+      const res = await fetch(`${API}/api/admin/wallet-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+
+      if (!data.requests) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = data.error || 'Failed to load requests.';
+        return;
+      }
+
+      msgEl.textContent = '';
+      const tbody = document.getElementById('requestsBody');
+      tbody.innerHTML = '';
+
+      if (!data.requests.length) {
+        msgEl.innerHTML = '<span class="empty-note">No requests yet.</span>';
+      }
+
+      data.requests.forEach(r => {
+        const tr = document.createElement('tr');
+        const statusClass = 'req-' + r.status;
+        const actions = r.status === 'pending'
+          ? `<button class="mini-btn mini-green" onclick="resolveRequest(${r.id}, 'approve')">Approve</button>
+             <button class="mini-btn mini-red" onclick="resolveRequest(${r.id}, 'reject')">Reject</button>`
+          : '-';
+
+        tr.innerHTML = `
+          <td>${r.username}</td>
+          <td>${r.type}</td>
+          <td>${r.coin || '-'}</td>
+          <td>$${r.amount.toFixed(2)}</td>
+          <td><span class="tag ${statusClass}">${r.status}</span></td>
+          <td>${actions}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('requestsTable').style.display = 'table';
+    });
+
+    async function resolveRequest(requestId, action) {
+      const endpoint = action === 'approve' ? 'approve-request' : 'reject-request';
+      const res = await fetch(`${API}/api/admin/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, requestId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('loadRequestsBtn').click();
+      } else {
+        alert(data.error || 'Failed');
+      }
     }
 
     document.getElementById('loadUsersBtn').addEventListener('click', async () => {
@@ -195,6 +495,10 @@
       tbody.innerHTML = '';
 
       data.users.forEach(user => {
+        const tier = user.verification_tier || 'none';
+        const status = user.account_status || 'active';
+        const tagClass = tier === 'gold' ? 'tier-gold' : tier === 'blue' ? 'tier-blue' : 'tier-none';
+        const statusClass = 'status-' + status;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${user.username}</td>
@@ -202,11 +506,28 @@
           <td>$${user.cash.toFixed(2)}</td>
           <td>$${user.wallet_balance.toFixed(2)}</td>
           <td>${user.user_wallet_address || '-'}</td>
-          <td class="user-actions">
-            <input type="number" placeholder="Amount" id="fundAmount-${user.id}">
-            <button onclick="addFunds(${user.id})">Add Funds</button>
-            <input type="password" placeholder="New pwd" id="newPwd-${user.id}">
-            <button class="reset-btn" onclick="resetPwd(${user.id})">Reset</button>
+          <td class="${tagClass}" style="font-weight:700;">${tier}</td>
+          <td><span class="tag ${statusClass}">${status}</span></td>
+          <td>
+            <div class="user-actions">
+              <input type="number" placeholder="Amount" id="fundAmount-${user.id}">
+              <button class="mini-btn mini-blue" onclick="addFunds(${user.id})">Add Funds</button>
+              <input type="password" placeholder="New pwd" id="newPwd-${user.id}">
+              <button class="mini-btn mini-orange" onclick="resetPwd(${user.id})">Reset</button>
+              <select id="tier-${user.id}">
+                <option value="none" ${tier === 'none' ? 'selected' : ''}>None</option>
+                <option value="blue" ${tier === 'blue' ? 'selected' : ''}>Blue</option>
+                <option value="gold" ${tier === 'gold' ? 'selected' : ''}>Gold</option>
+              </select>
+              <button class="mini-btn mini-gold" onclick="setTier(${user.id})">Set</button>
+              <select id="status-${user.id}">
+                <option value="active" ${status === 'active' ? 'selected' : ''}>Active</option>
+                <option value="suspended" ${status === 'suspended' ? 'selected' : ''}>Suspended</option>
+                <option value="banned" ${status === 'banned' ? 'selected' : ''}>Banned</option>
+              </select>
+              <button class="mini-btn mini-blue" onclick="setStatus(${user.id})">Apply</button>
+              <button class="mini-btn mini-red" onclick="deleteUser(${user.id}, '${user.username}')">Delete</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -236,6 +557,53 @@
       });
       const data = await res.json();
       alert(data.success ? 'Password reset successfully.' : (data.error || 'Failed'));
+    }
+
+    async function setTier(userId) {
+      const tier = document.getElementById(`tier-${userId}`).value;
+      const res = await fetch(`${API}/api/admin/set-tier`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, userId, tier })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('loadUsersBtn').click();
+      } else {
+        alert(data.error || 'Failed');
+      }
+    }
+
+    async function setStatus(userId) {
+      const status = document.getElementById(`status-${userId}`).value;
+      const res = await fetch(`${API}/api/admin/set-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, userId, status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('loadUsersBtn').click();
+      } else {
+        alert(data.error || 'Failed');
+      }
+    }
+
+    async function deleteUser(userId, username) {
+      const confirmed = confirm(`Are you sure you want to permanently delete "${username}"? This cannot be undone.`);
+      if (!confirmed) return;
+
+      const res = await fetch(`${API}/api/admin/delete-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, userId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('loadUsersBtn').click();
+      } else {
+        alert(data.error || 'Failed');
+      }
     }
   </script>
 

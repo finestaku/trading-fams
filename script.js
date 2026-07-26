@@ -5,11 +5,10 @@ const COINS = [
   { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', color: '#c2a633' }
 ];
 
-let cash = 10000;
-const startingCash = 10000;
+let cash = 0;
+let startingCash = 0;
+let bestScore = 0;
 const FEE_RATE = 0.005;
-
-let bestScore = Number(localStorage.getItem('bestScore')) || 0;
 
 let holdings = {};
 let invested = {};
@@ -33,6 +32,8 @@ async function loadFromServer() {
     cash = data.cash;
     holdings = data.holdings;
     invested = data.invested || invested;
+    bestScore = data.best_score || 0;
+    startingCash = data.starting_cash || 0;
   } catch (err) {
     console.log('Could not reach backend, using defaults.');
   }
@@ -148,7 +149,6 @@ function updateDisplay() {
 
   if (profitLoss > bestScore) {
     bestScore = profitLoss;
-    localStorage.setItem('bestScore', bestScore);
   }
   document.getElementById('bestScore').textContent = bestScore.toFixed(2);
 
@@ -160,7 +160,7 @@ async function saveToServer() {
     await fetch(`http://localhost:3000/api/data/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cash, holdings, invested })
+      body: JSON.stringify({ cash, holdings, invested, bestScore })
     });
   } catch (err) {
     console.log('Could not save to backend.');
@@ -217,7 +217,7 @@ function sellCoin(sym) {
 }
 
 function resetGame() {
-  cash = 10000;
+  cash = startingCash;
   COINS.forEach(coin => {
     holdings[coin.symbol] = 0;
     invested[coin.symbol] = 0;

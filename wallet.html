@@ -6,87 +6,111 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    .wallet-box {
-      max-width: 600px;
-      margin: 50px auto;
+    .wallet-wrap {
+      max-width: 700px;
+      margin: 40px auto;
       padding: 0 20px;
     }
-    .balance-card {
-      background: var(--summary-bg);
-      color: white;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .balance-card .amount { font-size: 36px; font-weight: 800; }
-    .balance-card .label { font-size: 13px; opacity: 0.8; margin-top: 4px; }
-    .disclaimer {
-      background: #fff3cd;
-      color: #856404;
-      padding: 12px 16px;
+    .disclaimer-banner {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.3);
       border-radius: 8px;
+      padding: 16px 20px;
       font-size: 13px;
-      margin-bottom: 20px;
+      color: var(--muted);
+      margin-bottom: 26px;
+      line-height: 1.5;
+    }
+    .balance-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 26px;
+      text-align: center;
+      margin-bottom: 26px;
+    }
+    .balance-card .value {
+      font-family: 'Playfair Display', serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .balance-card .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 6px;
     }
     .wallet-card {
       background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 22px;
     }
-    .wallet-card h3 { margin-top: 0; font-size: 16px; }
-    .wallet-card input {
+    .wallet-card h3 { margin-top: 0; }
+    .wallet-card label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 6px 0; }
+    .wallet-card input, .wallet-card select {
       width: 100%;
       padding: 10px;
-      margin-bottom: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 14px;
       box-sizing: border-box;
+      font-family: inherit;
     }
     .wallet-card button {
-      width: 100%;
-      padding: 10px;
+      margin-top: 14px;
+      padding: 10px 18px;
       border: none;
       border-radius: 6px;
-      color: white;
-      font-weight: 600;
+      background: linear-gradient(135deg, #d4af37, #a67c00);
+      color: #0d1321;
+      font-weight: 700;
+      font-size: 14px;
       cursor: pointer;
     }
-    .deposit-btn { background: #2ecc71; }
-    .withdraw-btn { background: #e74c3c; }
-    .save-btn { background: #3498db; }
-    #walletMsg, #addressMsg { font-size: 13px; margin-top: 8px; text-align: center; }
-
-    .company-wallet-item {
+    .address-preview {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 14px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.08);
-    }
-    .company-wallet-item:last-child { border-bottom: none; }
-    .qr-box { flex-shrink: 0; background: white; padding: 6px; border-radius: 8px; }
-    .wallet-info { flex: 1; min-width: 0; }
-    .wallet-info .coin-label { font-weight: 700; font-size: 14px; }
-    .wallet-info .address-text {
-      font-size: 12px;
-      color: var(--muted);
-      word-break: break-all;
-      margin-top: 4px;
-    }
-    .copy-btn {
-      background: #7f8c8d;
-      color: white;
-      border: none;
-      padding: 6px 10px;
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--bg);
       border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      margin-top: 6px;
+      border: 1px solid var(--border-soft);
     }
+    .address-preview .qr-box { background: white; padding: 6px; border-radius: 6px; flex-shrink: 0; }
+    .address-preview .addr-text { font-size: 12px; word-break: break-all; color: var(--muted); }
+    .copy-btn {
+      background: var(--summary-bg) !important;
+      color: #f0ead6 !important;
+      font-size: 12px !important;
+      padding: 6px 12px !important;
+      margin-top: 8px !important;
+    }
+    #depositMsg, #withdrawMsg, #saveAddrMsg { font-size: 13px; margin-top: 10px; }
+    .requests-list { margin-top: 10px; }
+    .request-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-soft);
+      font-size: 13px;
+    }
+    .request-row:last-child { border-bottom: none; }
+    .status-pill {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-pending { background: rgba(212,175,55,0.15); color: var(--accent); }
+    .status-approved { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .status-rejected { background: rgba(231,76,60,0.15); color: #e74c3c; }
   </style>
 </head>
 <body>
@@ -96,50 +120,66 @@
     <button class="hamburger" id="hamburgerBtn">☰</button>
     <div class="nav-menu" id="navMenu">
       <a href="index.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
       <a href="trading.html">Trading</a>
       <a href="wallet.html">Wallet</a>
       <a href="leaderboard.html">Leaderboard</a>
       <a href="support.html">Support</a>
-      <a href="about.html">About</a>
     </div>
   </nav>
 
-  <div class="wallet-box">
-    <div class="disclaimer">
-      ⚠️ This entire wallet is simulated for learning purposes. The addresses and QR codes below are fake and not connected to any real blockchain — do not send real cryptocurrency to them.
+  <div class="wallet-wrap">
+
+    <div class="disclaimer-banner">
+      ⚠️ This is a <strong> wallet balance</strong> for trading purposes only. cryptocurrency or funds are transferred. All deposits and withdrawals are reviewed and confirmed manually by an admin before your balance updates.
     </div>
 
     <div class="balance-card">
-      <div class="amount">$<span id="walletBalance">0.00</span></div>
-      <div class="label">Simulated Wallet Balance</div>
+      <div class="value">$<span id="walletBalance">0.00</span></div>
+      <div class="label">Wallet Balance</div>
     </div>
 
     <div class="wallet-card">
-      <h3>Deposit (Simulated)</h3>
-      <input type="number" id="depositAmount" placeholder="Amount to deposit" min="1">
-      <button class="deposit-btn" id="depositBtn">Deposit</button>
+      <h3>Deposit Funds</h3>
+      <label>Select Coin</label>
+      <select id="depositCoin">
+        <option value="BTC">Bitcoin (BTC)</option>
+        <option value="ETH">Ethereum (ETH)</option>
+        <option value="SOL">Solana (SOL)</option>
+        <option value="DOGE">Dogecoin (DOGE)</option>
+      </select>
+      <div class="address-preview">
+        <div class="qr-box" id="depositQr"></div>
+        <div class="addr-text" id="depositAddrText">Loading address...</div>
+      </div>
+      <button class="copy-btn" id="copyAddrBtn" type="button">Copy Address</button>
+      <label>Amount (USD equivalent)</label>
+      <input type="number" id="depositAmount" placeholder="e.g. 500">
+      <button id="depositBtn">Submit Deposit Request</button>
+      <p id="depositMsg"></p>
     </div>
 
     <div class="wallet-card">
-      <h3>Withdraw (Simulated)</h3>
-      <input type="number" id="withdrawAmount" placeholder="Amount to withdraw" min="1">
-      <button class="withdraw-btn" id="withdrawBtn">Withdraw</button>
-    </div>
-
-    <p id="walletMsg"></p>
-
-    <div class="wallet-card">
-      <h3>Company Wallet Addresses (Demo)</h3>
-      <div id="companyWallets"></div>
+      <h3>Withdraw Funds</h3>
+      <label>Amount (USD)</label>
+      <input type="number" id="withdrawAmount" placeholder="e.g. 100">
+      <button id="withdrawBtn">Submit Withdrawal Request</button>
+      <p id="withdrawMsg"></p>
     </div>
 
     <div class="wallet-card">
-      <h3>Your Reference Wallet Address (Demo)</h3>
-      <p style="font-size:13px; color:var(--muted); margin-top:0;">Save your own address here for reference — this is not connected to any real wallet.</p>
-      <input type="text" id="userAddress" placeholder="e.g. DEMO-BTC-yourAddressHere">
-      <button class="save-btn" id="saveAddressBtn">Save Address</button>
-      <p id="addressMsg"></p>
+      <h3>Your Reference Address (optional)</h3>
+      <p style="font-size:12px; color:var(--muted); margin-top:0;">Not connected to any real blockchain — for your own record-keeping only.</p>
+      <input type="text" id="userAddress" placeholder="Save your own wallet address for reference">
+      <button id="saveAddrBtn">Save</button>
+      <p id="saveAddrMsg"></p>
     </div>
+
+    <div class="wallet-card">
+      <h3>Your Requests</h3>
+      <div class="requests-list" id="requestsList">Loading...</div>
+    </div>
+
   </div>
 
   <script src="nav.js"></script>
@@ -148,102 +188,121 @@
     const userId = localStorage.getItem('userId');
     if (!userId) window.location.href = 'login.html';
 
-    const balanceEl = document.getElementById('walletBalance');
-    const msgEl = document.getElementById('walletMsg');
+    let companyWallets = {};
+    let depositQrInstance = null;
 
-    async function loadWallet() {
+    async function loadWalletData() {
       const res = await fetch(`${API}/api/data/${userId}`);
       const data = await res.json();
-      balanceEl.textContent = (data.wallet_balance || 0).toFixed(2);
-      if (data.user_wallet_address) {
-        document.getElementById('userAddress').value = data.user_wallet_address;
-      }
+      document.getElementById('walletBalance').textContent = (data.wallet_balance || 0).toFixed(2);
+      document.getElementById('userAddress').value = data.user_wallet_address || '';
     }
 
-    async function deposit() {
+    async function loadCompanyWallets() {
+      const res = await fetch(`${API}/api/company-wallets`);
+      const data = await res.json();
+      data.wallets.forEach(w => companyWallets[w.coin] = w.address);
+      updateDepositAddress();
+    }
+
+    function updateDepositAddress() {
+      const coin = document.getElementById('depositCoin').value;
+      const address = companyWallets[coin] || 'Address not set by admin yet';
+      document.getElementById('depositAddrText').textContent = address;
+
+      const qrBox = document.getElementById('depositQr');
+      qrBox.innerHTML = '';
+      depositQrInstance = new QRCode(qrBox, { text: address, width: 80, height: 80 });
+    }
+
+    document.getElementById('depositCoin').addEventListener('change', updateDepositAddress);
+
+    document.getElementById('copyAddrBtn').addEventListener('click', () => {
+      const text = document.getElementById('depositAddrText').textContent;
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copyAddrBtn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy Address', 1500);
+    });
+
+    document.getElementById('depositBtn').addEventListener('click', async () => {
       const amount = Number(document.getElementById('depositAmount').value);
-      msgEl.textContent = '';
+      const coin = document.getElementById('depositCoin').value;
+      const msgEl = document.getElementById('depositMsg');
+
       const res = await fetch(`${API}/api/wallet/deposit/${userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount })
+        body: JSON.stringify({ amount, coin })
       });
       const data = await res.json();
-      if (data.wallet_balance !== undefined) {
-        balanceEl.textContent = data.wallet_balance.toFixed(2);
-        msgEl.style.color = '#2ecc71';
-        msgEl.textContent = 'Deposit successful.';
-      } else {
-        msgEl.style.color = '#e74c3c';
-        msgEl.textContent = data.error || 'Something went wrong.';
+      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl.textContent = data.message || data.error;
+      if (data.success) {
+        document.getElementById('depositAmount').value = '';
+        loadRequests();
       }
-    }
+    });
 
-    async function withdraw() {
+    document.getElementById('withdrawBtn').addEventListener('click', async () => {
       const amount = Number(document.getElementById('withdrawAmount').value);
-      msgEl.textContent = '';
+      const msgEl = document.getElementById('withdrawMsg');
+
       const res = await fetch(`${API}/api/wallet/withdraw/${userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount })
       });
       const data = await res.json();
-      if (data.wallet_balance !== undefined) {
-        balanceEl.textContent = data.wallet_balance.toFixed(2);
-        msgEl.style.color = '#2ecc71';
-        msgEl.textContent = 'Withdrawal successful.';
-      } else {
-        msgEl.style.color = '#e74c3c';
-        msgEl.textContent = data.error || 'Something went wrong.';
+      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl.textContent = data.message || data.error;
+      if (data.success) {
+        document.getElementById('withdrawAmount').value = '';
+        loadRequests();
       }
-    }
+    });
 
-    async function loadCompanyWallets() {
-      const res = await fetch(`${API}/api/company-wallets`);
-      const data = await res.json();
-      const container = document.getElementById('companyWallets');
-      container.innerHTML = '';
-
-      data.wallets.forEach(wallet => {
-        const item = document.createElement('div');
-        item.className = 'company-wallet-item';
-        const qrId = `qr-${wallet.coin}`;
-        item.innerHTML = `
-          <div class="qr-box" id="${qrId}"></div>
-          <div class="wallet-info">
-            <div class="coin-label">${wallet.coin}</div>
-            <div class="address-text">${wallet.address}</div>
-            <button class="copy-btn" onclick="navigator.clipboard.writeText('${wallet.address}')">Copy Address</button>
-          </div>
-        `;
-        container.appendChild(item);
-        new QRCode(document.getElementById(qrId), {
-          text: wallet.address,
-          width: 70,
-          height: 70
-        });
-      });
-    }
-
-    async function saveAddress() {
+    document.getElementById('saveAddrBtn').addEventListener('click', async () => {
       const address = document.getElementById('userAddress').value;
-      const msgEl2 = document.getElementById('addressMsg');
+      const msgEl = document.getElementById('saveAddrMsg');
+
       const res = await fetch(`${API}/api/wallet/address/${userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address })
       });
       const data = await res.json();
-      msgEl2.style.color = data.success ? '#2ecc71' : '#e74c3c';
-      msgEl2.textContent = data.success ? 'Address saved.' : 'Something went wrong.';
+      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
+      msgEl.textContent = data.success ? 'Saved.' : (data.error || 'Failed.');
+    });
+
+    async function loadRequests() {
+      const res = await fetch(`${API}/api/wallet/requests/${userId}`);
+      const data = await res.json();
+      const list = document.getElementById('requestsList');
+
+      if (!data.requests.length) {
+        list.innerHTML = '<p style="font-size:13px; color:var(--muted);">No requests yet.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+      data.requests.forEach(r => {
+        const row = document.createElement('div');
+        row.className = 'request-row';
+        const typeLabel = r.type === 'deposit' ? 'Deposit' : 'Withdrawal';
+        const coinLabel = r.coin ? ` (${r.coin})` : '';
+        row.innerHTML = `
+          <span>${typeLabel}${coinLabel}: $${r.amount.toFixed(2)}</span>
+          <span class="status-pill status-${r.status}">${r.status}</span>
+        `;
+        list.appendChild(row);
+      });
     }
 
-    document.getElementById('depositBtn').addEventListener('click', deposit);
-    document.getElementById('withdrawBtn').addEventListener('click', withdraw);
-    document.getElementById('saveAddressBtn').addEventListener('click', saveAddress);
-
-    loadWallet();
+    loadWalletData();
     loadCompanyWallets();
+    loadRequests();
   </script>
 
 </body>
