@@ -1,4 +1,4 @@
-const NAV_API = 'http://localhost:3000';
+const NAV_API = 'https://crypto-global-trade-backend.onrender.com';
 
 function badgeSvgNav(color) {
   return `<svg viewBox="0 0 100 100" style="width:16px;height:16px;vertical-align:middle;margin-left:6px;">

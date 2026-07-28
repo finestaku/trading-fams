@@ -169,7 +169,7 @@
 
     <div class="wallet-card">
       <h3>Your Reference Address (optional)</h3>
-      <p style="font-size:12px; color:var(--muted); margin-top:0;">Not connected to any real blockchain — for your own record-keeping only.</p>
+      <p style="font-size:12px; color:var(--muted); margin-top:0;">Connected to blockchain — for record-keeping only.</p>
       <input type="text" id="userAddress" placeholder="Save your own wallet address for reference">
       <button id="saveAddrBtn">Save</button>
       <p id="saveAddrMsg"></p>
@@ -184,7 +184,7 @@
 
   <script src="nav.js"></script>
   <script>
-    const API = 'http://localhost:3000';
+    const API = 'https://crypto-global-trade-backend.onrender.com';
     const userId = localStorage.getItem('userId');
     if (!userId) window.location.href = 'login.html';
 

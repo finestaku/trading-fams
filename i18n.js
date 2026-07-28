@@ -63,7 +63,7 @@ const TRANSLATIONS = {
     feat3_title: "Kein Risiko", feat3_desc: "Handle mit 10.000 $ Übungsgeld. Lerne, ohne einen Cent zu verlieren.",
     feat4_title: "Verfolge deinen Rekord", feat4_desc: "Dein höchster Gewinn wird automatisch gespeichert — komm zurück und schlage ihn.",
     about_title: "Über dieses Projekt",
-    about_p1: "Dies ist eine Krypto-Handels-Demo-App, die entwickelt wurde, um echte Webentwicklungsfähigkeiten zu üben: Live-API-Daten, DOM-Manipulation, Diagramme und lokaler Speicher.",
+    about_p1: "Dies ist eine Krypto-Handels-Global-App, die entwickelt wurde, um echte Webentwicklungsfähigkeiten zu üben: Live-API-Daten, DOM-Manipulation, Diagramme und lokaler Speicher.",
     about_p2: "Es wird nie echtes Geld verwendet. Preise stammen live von CoinGecko, aber der gesamte Handel erfolgt mit fiktivem Startgeld.",
     leaderboard_title: "Dein bester Punktestand",
     leaderboard_desc: "Das ist der höchste Gewinn, den du beim Handeln erreicht hast. Schlage ihn auf der Handelsseite!",

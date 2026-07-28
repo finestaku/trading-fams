@@ -27,7 +27,7 @@ if (!userId) {
 
 async function loadFromServer() {
   try {
-    const res = await fetch(`http://localhost:3000/api/data/${userId}`);
+    const res = await fetch(`https://crypto-global-trade-backend.onrender.com/api/data/${userId}`);
     const data = await res.json();
     cash = data.cash;
     holdings = data.holdings;
@@ -157,7 +157,7 @@ function updateDisplay() {
 
 async function saveToServer() {
   try {
-    await fetch(`http://localhost:3000/api/data/${userId}`, {
+    await fetch(`https://crypto-global-trade-backend.onrender.com/api/data/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cash, holdings, invested, bestScore })

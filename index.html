@@ -307,7 +307,7 @@
       const email = document.getElementById('newsletterEmail').value;
       const msgEl = document.getElementById('newsletterMsg');
       try {
-        const res = await fetch('http://localhost:3000/api/newsletter', {
+        const res = await fetch('https://crypto-global-trade-backend.onrender.com/api/newsletter', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
@@ -322,7 +322,7 @@
     });
   </script>
   <script>
-    fetch('http://localhost:3000/api/content')
+    fetch('https://crypto-global-trade-backend.onrender.com/api/content')
       .then(res => res.json())
       .then(content => {
         TRANSLATIONS.en.hero_title = content.hero_title;
