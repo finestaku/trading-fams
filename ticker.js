@@ -10,7 +10,7 @@ let lastPrices = {};
 async function updateTicker() {
   try {
     const ids = TICKER_COINS.map(c => c.id).join(',');
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+    const res = await fetch(`https://crypto-global-trade-backend.onrender.com/api/prices`);
     const data = await res.json();
 
     const items = TICKER_COINS.map(coin => {

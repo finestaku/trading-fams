@@ -218,7 +218,7 @@
       }
 
       const ids = Object.values(COIN_NAMES).join(',');
-      const priceRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+      const priceRes = await fetch(`https://crypto-global-trade-backend.onrender.com/api/prices`);
       const prices = await priceRes.json();
 
       let portfolioValue = data.cash;
