@@ -5,6 +5,8 @@ const COINS = [
   { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', color: '#c2a633' }
 ];
 
+const API_BASE = 'https://crypto-global-trade-backend.onrender.com';
+
 let cash = 0;
 let startingCash = 0;
 let bestScore = 0;
@@ -27,7 +29,7 @@ if (!userId) {
 
 async function loadFromServer() {
   try {
-    const res = await fetch(`https://crypto-global-trade-backend.onrender.com/api/data/${userId}`);
+    const res = await fetch(`${API_BASE}/api/data/${userId}`);
     const data = await res.json();
     cash = data.cash;
     holdings = data.holdings;
@@ -91,8 +93,7 @@ COINS.forEach(coin => {
 
 async function fetchPrices() {
   try {
-    const ids = COINS.map(c => c.id).join(',');
-    const res = await fetch(`https://crypto-global-trade-backend.onrender.com/api/prices`);
+    const res = await fetch(`${API_BASE}/api/prices`);
     const data = await res.json();
 
     const now = new Date();
@@ -157,13 +158,25 @@ function updateDisplay() {
 
 async function saveToServer() {
   try {
-    await fetch(`https://crypto-global-trade-backend.onrender.com/api/data/${userId}`, {
+    await fetch(`${API_BASE}/api/data/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cash, holdings, invested, bestScore })
     });
   } catch (err) {
     console.log('Could not save to backend.');
+  }
+}
+
+async function logTransaction(action, coin, amountUsd, fee) {
+  try {
+    await fetch(`${API_BASE}/api/transactions/${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, coin, amountUsd, fee })
+    });
+  } catch (err) {
+    console.log('Could not log transaction.');
   }
 }
 
@@ -192,6 +205,7 @@ function buyCoin(sym) {
   holdings[sym] += bought;
   invested[sym] += amount;
   addHistory(`Bought ${bought.toFixed(6)} ${sym.toUpperCase()} for $${amount} (fee: $${fee.toFixed(2)})`);
+  logTransaction('buy', sym, amount, fee);
   updateDisplay();
 }
 
@@ -213,6 +227,7 @@ function sellCoin(sym) {
   const proportionSold = toSell / (holdings[sym] + toSell);
   invested[sym] -= invested[sym] * proportionSold;
   addHistory(`Sold ${toSell.toFixed(6)} ${sym.toUpperCase()} for $${amount} (fee: $${fee.toFixed(2)})`);
+  logTransaction('sell', sym, amount, fee);
   updateDisplay();
 }
 

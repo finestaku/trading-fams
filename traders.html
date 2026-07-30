@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traders - Crypto Global Trade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .traders-wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    .toggle-card {
+      background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 8px;
+      padding: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .toggle-card .label { font-size: 14px; font-weight: 600; }
+    .toggle-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .switch { position: relative; width: 46px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: .3s; border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
+      background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background: linear-gradient(135deg, #d4af37, #a67c00); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .trader-card {
+      background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px;
+      padding: 24px; margin-bottom: 20px; position: relative;
+    }
+    .trader-card.rank-1 { border-color: #d4af37; box-shadow: 0 0 0 1px #d4af37; }
+    .trader-card.rank-2 { border-color: #c0c0c0; }
+    .trader-card.rank-3 { border-color: #cd7f32; }
+    .rank-badge {
+      position: absolute; top: -12px; left: 20px; padding: 3px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; color: white; text-transform: uppercase;
+    }
+    .rank-badge.gold { background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; }
+    .rank-badge.silver { background: #b0b0b0; }
+    .rank-badge.bronze { background: #cd7f32; }
+
+    .trader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .trader-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .trader-profit { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+    .copy-count { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .holdings-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+    .holdings-bar div { height: 100%; }
+    .holdings-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .holdings-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    .recent-tx { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.8; }
+    .copy-btn {
+      background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; border: none;
+      padding: 10px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .empty-note { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 0; }
+    .verified-badge-svg { width: 16px; height: 16px; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">Crypto Global Trade</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu"></div>
+  </nav>
+
+  <div class="traders-wrap">
+    <h2 style="font-family:'Playfair Display', serif;">Top Traders</h2>
+    <p style="color:var(--muted); font-size:14px; margin-top:-10px; margin-bottom:24px;">Browse public trader portfolios and copy their strategy instantly.</p>
+
+    <div class="toggle-card">
+      <div>
+        <div class="label">Make my portfolio public</div>
+        <div class="sub">Let others see your holdings and copy your trades</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="publicToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div id="tradersList"></div>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    const API = 'https://crypto-global-trade-backend.onrender.com';
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'login.html';
+
+    const COIN_COLORS = { btc: '#f7931a', eth: '#627eea', sol: '#00ffa3', doge: '#c2a633' };
+    let livePrices = {};
+
+    function badgeSvg(color) {
+      return `<svg class="verified-badge-svg" viewBox="0 0 100 100"><polygon points="50,2 61,12 76,8 82,22 97,28 93,44 100,58 88,68 89,84 73,85 65,98 50,91 35,98 27,85 11,84 12,68 0,58 7,44 3,28 18,22 24,8 39,12" fill="${color}"/><path d="M32 50 L44 62 L70 36" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    async function loadMyStatus() {
+      const res = await fetch(`${API}/api/data/${userId}`);
+      const data = await res.json();
+      document.getElementById('publicToggle').checked = data.show_portfolio_public;
+    }
+
+    document.getElementById('publicToggle').addEventListener('change', async (e) => {
+      await fetch(`${API}/api/toggle-public/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublic: e.target.checked })
+      });
+      loadTraders();
+    });
+
+    async function loadTraders() {
+      const priceRes = await fetch(`${API}/api/prices`);
+      const priceData = await priceRes.json();
+      livePrices = { btc: priceData.bitcoin.usd, eth: priceData.ethereum.usd, sol: priceData.solana.usd, doge: priceData.dogecoin.usd };
+
+      const res = await fetch(`${API}/api/traders`);
+      const data = await res.json();
+
+      const withProfit = data.traders.map(t => {
+        let portfolioValue = t.cash;
+        Object.keys(t.holdings).forEach(sym => {
+          portfolioValue += t.holdings[sym] * livePrices[sym];
+        });
+        const profit = portfolioValue - (t.starting_cash || 0);
+        const profitPct = t.starting_cash > 0 ? (profit / t.starting_cash) * 100 : 0;
+        return { ...t, portfolioValue, profit, profitPct };
+      }).sort((a, b) => b.profitPct - a.profitPct);
+
+      const container = document.getElementById('tradersList');
+      container.innerHTML = '';
+
+      if (!withProfit.length) {
+        container.innerHTML = '<div class="empty-note">No public traders yet. Be the first to share your portfolio!</div>';
+        return;
+      }
+
+      withProfit.forEach((t, index) => {
+        if (String(t.id) === String(userId)) return; // don't show copy button for yourself
+
+        const rank = index + 1;
+        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+        const rankBadge = rank === 1 ? '<span class="rank-badge gold">#1 Top Trader</span>'
+          : rank === 2 ? '<span class="rank-badge silver">#2</span>'
+          : rank === 3 ? '<span class="rank-badge bronze">#3</span>' : '';
+
+        let badgeHtml = '';
+        if (t.verification_tier === 'gold') badgeHtml = badgeSvg('#d4af37');
+        else if (t.verification_tier === 'blue') badgeHtml = badgeSvg('#3b82f6');
+
+        let totalHoldingsValue = 0;
+        Object.keys(t.holdings).forEach(sym => totalHoldingsValue += t.holdings[sym] * livePrices[sym]);
+
+        let barHtml = '';
+        let legendHtml = '';
+        Object.keys(t.holdings).forEach(sym => {
+          const value = t.holdings[sym] * livePrices[sym];
+          const pct = totalHoldingsValue > 0 ? (value / totalHoldingsValue) * 100 : 0;
+          if (pct > 0) {
+            barHtml += `<div style="width:${pct}%; background:${COIN_COLORS[sym]};"></div>`;
+            legendHtml += `<span><span class="legend-dot" style="background:${COIN_COLORS[sym]};"></span>${sym.toUpperCase()} ${pct.toFixed(0)}%</span>`;
+          }
+        });
+        if (!barHtml) barHtml = `<div style="width:100%; background:var(--border-soft);"></div>`;
+
+        let txHtml = t.recent_transactions.map(tx =>
+          `${tx.action === 'buy' ? '🟢 Bought' : '🔴 Sold'} $${tx.amount_usd.toFixed(0)} ${tx.coin.toUpperCase()}`
+        ).join('<br>') || 'No recent trades';
+
+        const card = document.createElement('div');
+        card.className = `trader-card ${rankClass}`;
+        card.innerHTML = `
+          ${rankBadge}
+          <div class="trader-header">
+            <div class="trader-name">${t.username} ${badgeHtml}</div>
+            <div style="text-align:right;">
+              <div class="trader-profit" style="color:${t.profitPct >= 0 ? '#2ecc71' : '#e74c3c'};">${t.profitPct >= 0 ? '+' : ''}${t.profitPct.toFixed(1)}%</div>
+              <div class="copy-count">Copied by ${t.copy_count} trader${t.copy_count === 1 ? '' : 's'}</div>
+            </div>
+          </div>
+          <div class="holdings-bar">${barHtml}</div>
+          <div class="holdings-legend">${legendHtml}</div>
+          <div class="recent-tx">${txHtml}</div>
+          <button class="copy-btn" onclick="copyTrade(${t.id})">Copy Trade</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function copyTrade(targetUserId) {
+      const confirmed = confirm('This will replace your current holdings and cash to match this trader\'s allocation. Continue?');
+      if (!confirmed) return;
+
+      const res = await fetch(`${API}/api/copy-trade/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Portfolio copied successfully! Check your Trading page.');
+      } else {
+        alert(data.error || 'Copy trade failed.');
+      }
+    }
+
+    loadMyStatus();
+    loadTraders();
+  </script>
+
+</body>
+</html>

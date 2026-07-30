@@ -50,6 +50,7 @@ async function renderNavMenu(navMenu, username, userId) {
     <a href="dashboard.html">Dashboard</a>
     <a href="trading.html" data-i18n="nav_trading">Trading</a>
     <a href="wallet.html">Wallet</a>
+    <a href="traders.html">Traders</a>
     <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
     <a href="about.html" data-i18n="nav_about">About</a>
     <a href="support.html">Support</a>
