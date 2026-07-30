@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Crypto Global Trade</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
@@ -35,6 +31,11 @@
       max-width: 960px;
       margin: 0 auto;
       padding: 30px 20px 60px 20px;
+    }
+
+    .login-gate-wrap {
+      max-width: 400px;
+      margin: 80px auto;
     }
 
     .admin-box {
@@ -192,6 +193,7 @@
     .wallet-edit-row .btn { margin-top: 10px; padding: 8px 16px; font-size: 12px; }
 
     .empty-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+    .logout-admin { font-size: 12px; color: var(--muted); text-decoration: underline; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -203,70 +205,80 @@
 
   <div class="admin-wrap">
 
-    <div class="admin-box">
-      <h2><span class="section-icon">🔑</span> Admin Access</h2>
-      <input type="password" id="adminPassword" placeholder="Enter admin password">
-      <button class="btn btn-gold" id="unlockBtn">Unlock Admin Tools</button>
-      <p id="adminMsg"></p>
+    <div id="loginGate" class="login-gate-wrap">
+      <div class="admin-box">
+        <h2><span class="section-icon">🔑</span> Admin Access</h2>
+        <input type="password" id="adminPassword" placeholder="Enter admin password">
+        <button class="btn btn-gold" id="unlockBtn">Unlock Admin Tools</button>
+        <p id="adminMsg"></p>
+      </div>
     </div>
 
-    <div class="admin-box">
-      <h3><span class="section-icon">✉️</span> Send Email to a User</h3>
-      <p class="section-note">Sends a real, branded email via your connected Gmail account.</p>
-      <label>Recipient</label>
-      <select id="emailRecipientSelect">
-        <option value="">-- Select a registered user --</option>
-      </select>
-      <label>Or type an email manually</label>
-      <input type="email" id="emailTo" placeholder="someone@example.com">
-      <label>Subject</label>
-      <input type="text" id="emailSubject" placeholder="e.g. Account Update">
-      <label>Message</label>
-      <textarea id="emailMessage" placeholder="Write your message here..."></textarea>
-      <button class="btn btn-gold" id="emailSendBtn">Send Branded Email</button>
-      <p id="emailMsg"></p>
-    </div>
+    <div id="adminPanelContent" style="display:none;">
 
-    <div class="admin-box">
-      <h3><span class="section-icon">🏠</span> Homepage Hero Content</h3>
-      <label>Hero Title</label>
-      <input type="text" id="heroTitle">
-      <label>Hero Description</label>
-      <textarea id="heroDesc"></textarea>
-      <label>Hero Button Text</label>
-      <input type="text" id="heroBtn">
-      <button class="btn btn-gold" id="saveContentBtn">Save Homepage Content</button>
-    </div>
+      <div style="text-align:right; margin-bottom:10px;">
+        <span class="logout-admin" id="lockAgainBtn">Lock panel</span>
+      </div>
 
-    <div class="admin-box">
-      <h3><span class="section-icon">💳</span> Company Wallet Addresses (Global)</h3>
-      <p class="section-note">Simulated addresses shown to users on the Wallet page — not real blockchain addresses. The QR code updates live as you type.</p>
-      <div id="companyWalletsEdit"></div>
-      <p id="walletsMsg"></p>
-    </div>
+      <div class="admin-box">
+        <h3><span class="section-icon">✉️</span> Send Email to a User</h3>
+        <p class="section-note">Sends a real, branded email via your connected Gmail account.</p>
+        <label>Recipient</label>
+        <select id="emailRecipientSelect">
+          <option value="">-- Select a registered user --</option>
+        </select>
+        <label>Or type an email manually</label>
+        <input type="email" id="emailTo" placeholder="someone@example.com">
+        <label>Subject</label>
+        <input type="text" id="emailSubject" placeholder="e.g. Account Update">
+        <label>Message</label>
+        <textarea id="emailMessage" placeholder="Write your message here..."></textarea>
+        <button class="btn btn-gold" id="emailSendBtn">Send Branded Email</button>
+        <p id="emailMsg"></p>
+      </div>
 
-    <div class="admin-box">
-      <h3><span class="section-icon">📥</span> Wallet Requests (Deposits & Withdrawals)</h3>
-      <button class="btn btn-dark" id="loadRequestsBtn">Load Requests</button>
-      <p id="requestsMsg"></p>
-      <table id="requestsTable" style="display:none;">
-        <thead>
-          <tr><th>User</th><th>Type</th><th>Coin</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="requestsBody"></tbody>
-      </table>
-    </div>
+      <div class="admin-box">
+        <h3><span class="section-icon">🏠</span> Homepage Hero Content</h3>
+        <label>Hero Title</label>
+        <input type="text" id="heroTitle">
+        <label>Hero Description</label>
+        <textarea id="heroDesc"></textarea>
+        <label>Hero Button Text</label>
+        <input type="text" id="heroBtn">
+        <button class="btn btn-gold" id="saveContentBtn">Save Homepage Content</button>
+      </div>
 
-    <div class="admin-box">
-      <h3><span class="section-icon">👥</span> All Users</h3>
-      <button class="btn btn-dark" id="loadUsersBtn">Load Users</button>
-      <p id="usersMsg"></p>
-      <table id="usersTable" style="display:none;">
-        <thead>
-          <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>Address</th><th>Tier</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="usersBody"></tbody>
-      </table>
+      <div class="admin-box">
+        <h3><span class="section-icon">💳</span> Company Wallet Addresses (Demo)</h3>
+        <p class="section-note">Simulated addresses shown to users on the Wallet page — not real blockchain addresses. The QR code updates live as you type.</p>
+        <div id="companyWalletsEdit"></div>
+        <p id="walletsMsg"></p>
+      </div>
+
+      <div class="admin-box">
+        <h3><span class="section-icon">📥</span> Wallet Requests (Deposits & Withdrawals)</h3>
+        <button class="btn btn-dark" id="loadRequestsBtn">Load Requests</button>
+        <p id="requestsMsg"></p>
+        <table id="requestsTable" style="display:none;">
+          <thead>
+            <tr><th>User</th><th>Type</th><th>Coin</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="requestsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="admin-box">
+        <h3><span class="section-icon">👥</span> All Users</h3>
+        <button class="btn btn-dark" id="loadUsersBtn">Load Users</button>
+        <p id="usersMsg"></p>
+        <table id="usersTable" style="display:none;">
+          <thead>
+            <tr><th>Username</th><th>Email</th><th>Cash</th><th>Wallet</th><th>Address</th><th>Tier</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+
     </div>
 
   </div>
@@ -284,17 +296,41 @@
       try {
         const res = await fetch(`${API}/api/content`);
         const data = await res.json();
+
+        const testRes = await fetch(`${API}/api/admin/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPassword })
+        });
+        const testData = await testRes.json();
+
+        if (!testData.users) {
+          msgEl.style.color = '#e74c3c';
+          msgEl.textContent = testData.error || 'Wrong password.';
+          return;
+        }
+
         document.getElementById('heroTitle').value = data.hero_title;
         document.getElementById('heroDesc').value = data.hero_desc;
         document.getElementById('heroBtn').value = data.hero_btn;
-        msgEl.style.color = '#2ecc71';
-        msgEl.textContent = 'Ready. Password will be checked when you save.';
+
+        document.getElementById('loginGate').style.display = 'none';
+        document.getElementById('adminPanelContent').style.display = 'block';
+
         loadCompanyWalletsForEditing();
         loadRecipientOptions();
       } catch (err) {
         msgEl.style.color = '#e74c3c';
         msgEl.textContent = 'Could not reach backend.';
       }
+    });
+
+    document.getElementById('lockAgainBtn').addEventListener('click', () => {
+      adminPassword = '';
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminMsg').textContent = '';
+      document.getElementById('adminPanelContent').style.display = 'none';
+      document.getElementById('loginGate').style.display = 'block';
     });
 
     async function loadRecipientOptions() {
@@ -366,8 +402,7 @@
         body: JSON.stringify(body)
       });
       const data = await res.json();
-      msgEl.style.color = data.success ? '#2ecc71' : '#e74c3c';
-      msgEl.textContent = data.success ? 'Saved!' : (data.error || 'Failed.');
+      alert(data.success ? 'Saved!' : (data.error || 'Failed.'));
     });
 
     async function loadCompanyWalletsForEditing() {
@@ -386,7 +421,7 @@
           <span class="coin-tag">${coin}</span>
           <div class="qr-preview" id="qr-preview-${coin}"></div>
           <div class="input-col">
-            <input type="text" id="wallet-${coin}" value="${currentAddress}" placeholder="Global address for ${coin}">
+            <input type="text" id="wallet-${coin}" value="${currentAddress}" placeholder="Demo address for ${coin}">
             <br>
             <button class="btn btn-gold" onclick="saveCompanyWallet('${coin}')">Save</button>
           </div>
