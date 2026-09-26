@@ -12,7 +12,7 @@
     .traders-wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
     .toggle-card {
       background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 8px;
-      padding: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;
+      padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
     }
     .toggle-card .label { font-size: 14px; font-weight: 600; }
     .toggle-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
@@ -28,6 +28,18 @@
     }
     input:checked + .slider { background: linear-gradient(135deg, #d4af37, #a67c00); }
     input:checked + .slider:before { transform: translateX(20px); }
+
+    .activity-feed {
+      background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px;
+      padding: 18px 20px; margin-bottom: 26px; max-height: 220px; overflow-y: auto;
+    }
+    .activity-feed h4 { margin: 0 0 12px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .activity-row { display: flex; justify-content: space-between; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-row .who { font-weight: 600; }
+    .activity-row .buy { color: #2ecc71; }
+    .activity-row .sell { color: #e74c3c; }
+    .activity-row .when { color: var(--muted); font-size: 11px; }
 
     .trader-card {
       background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px;
@@ -88,6 +100,11 @@
       </label>
     </div>
 
+    <div class="activity-feed">
+      <h4>🔴 Live Trading Activity</h4>
+      <div id="activityList">Loading...</div>
+    </div>
+
     <div id="tradersList"></div>
   </div>
 
@@ -146,7 +163,7 @@
       }
 
       withProfit.forEach((t, index) => {
-        if (String(t.id) === String(userId)) return; // don't show copy button for yourself
+        if (String(t.id) === String(userId)) return;
 
         const rank = index + 1;
         const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
@@ -214,8 +231,37 @@
       }
     }
 
+    function timeAgo(dateStr) {
+      const seconds = Math.floor((Date.now() - new Date(dateStr + 'Z')) / 1000);
+      if (seconds < 60) return `${seconds}s ago`;
+      const mins = Math.floor(seconds / 60);
+      if (mins < 60) return `${mins}m ago`;
+      return `${Math.floor(mins / 60)}h ago`;
+    }
+
+    async function loadActivityFeed() {
+      try {
+        const res = await fetch(`${API}/api/activity-feed`);
+        const data = await res.json();
+        const list = document.getElementById('activityList');
+        if (!data.activity.length) {
+          list.innerHTML = '<div style="font-size:13px; color:var(--muted);">No activity yet.</div>';
+          return;
+        }
+        list.innerHTML = data.activity.map(a => `
+          <div class="activity-row">
+            <span><span class="who">${a.username}</span> <span class="${a.action}">${a.action === 'buy' ? 'bought' : 'sold'} $${a.amount_usd.toFixed(0)} ${a.coin.toUpperCase()}</span></span>
+            <span class="when">${timeAgo(a.created_at)}</span>
+          </div>
+        `).join('');
+      } catch (err) {}
+    }
+
     loadMyStatus();
     loadTraders();
+    loadActivityFeed();
+    setInterval(loadActivityFeed, 10000);
+    setInterval(loadTraders, 30000);
   </script>
 
 </body>
