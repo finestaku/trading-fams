@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crypto Global Trade — Sign In</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
     body { margin: 0; }
@@ -132,8 +132,8 @@
   <div class="gate-wrap">
     <div class="gate-left">
       <div class="logo-mark">Crypto Global Trade</div>
-      <h1>Trade crypto with confidence — without the risk of loosing money.</h1>
-      <p>A private, invite-quality platform built for people who want to sharpen their trading instincts. Live market prices, a full portfolio dashboard, and a wallet system — all running on a funded accounts to make real profits, so every decision is a starting point in building wealth, not a liability.</p>
+      <h1>Trade crypto with confidence — without the risk of real money.</h1>
+      <p>A private, invite-quality simulation built for people who want to sharpen their trading instincts. Live market prices, a full portfolio dashboard, and a wallet system — all running on virtual funds, so every decision is a lesson, not a liability.</p>
       <div class="gate-features">
         <div class="gate-feature"><span class="dot"></span> Live prices for Bitcoin, Ethereum, Solana & Dogecoin</div>
         <div class="gate-feature"><span class="dot"></span> $0 starting balance — fund your account to begin</div>
@@ -153,7 +153,7 @@
         <button id="signupBtn">Create Account</button>
         <p id="loginError"></p>
         <p class="hint">Forgot your password? Contact support to have it reset.</p>
-        <p class="gate-disclaimer">This is an official trading platform. Only real money or cryptocurrency is ever transferred. All balances are secured and highly encripted.</p>
+        <p class="gate-disclaimer">This is a simulated trading platform. No real money or cryptocurrency is ever transferred. All balances are virtual.</p>
       </div>
     </div>
   </div>
@@ -180,15 +180,16 @@
         });
         const data = await res.json();
 
-        if (data.userId) {
+        if (data.userId && data.token) {
           localStorage.setItem('userId', data.userId);
           localStorage.setItem('username', username);
+          localStorage.setItem('authToken', data.token);
           window.location.href = 'index.html';
         } else {
           errorEl.textContent = data.error || 'Something went wrong';
         }
       } catch (err) {
-        errorEl.textContent = 'Could not reach server. Is your backend running?';
+        errorEl.textContent = 'Could not reach server. Please try again in a moment.';
       }
     }
 

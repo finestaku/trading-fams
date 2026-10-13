@@ -1,5 +1,31 @@
 const NAV_API = 'https://crypto-global-trade-backend.onrender.com';
 
+// ---- Attach the login token to requests that need it ----
+(function () {
+  const originalFetch = window.fetch;
+  const protectedPath = /\/api\/(data|wallet|transactions|toggle-public|copy-trade)\//;
+
+  window.fetch = async function (url, options) {
+    options = options || {};
+    const needsAuth = typeof url === 'string' && url.startsWith(NAV_API) && protectedPath.test(url);
+
+    if (needsAuth) {
+      const token = localStorage.getItem('authToken');
+      options.headers = Object.assign({}, options.headers, token ? { Authorization: 'Bearer ' + token } : {});
+    }
+
+    const res = await originalFetch(url, options);
+
+    if (needsAuth && res.status === 401) {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('authToken');
+      window.location.href = 'login.html';
+    }
+    return res;
+  };
+})();
+
 function badgeSvgNav(color) {
   return `<svg viewBox="0 0 100 100" style="width:16px;height:16px;vertical-align:middle;margin-left:6px;">
     <polygon points="50,2 61,12 76,8 82,22 97,28 93,44 100,58 88,68 89,84 73,85 65,98 50,91 35,98 27,85 11,84 12,68 0,58 7,44 3,28 18,22 24,8 39,12" fill="${color}"/>
@@ -11,8 +37,12 @@ function initNav() {
   const isLoginPage = window.location.pathname.endsWith('login.html');
   const userId = localStorage.getItem('userId');
   const username = localStorage.getItem('username');
+  const token = localStorage.getItem('authToken');
 
-  if (!userId && !isLoginPage) {
+  if ((!userId || !token) && !isLoginPage) {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('authToken');
     window.location.href = 'login.html';
     return;
   }
@@ -64,6 +94,7 @@ async function renderNavMenu(navMenu, username, userId) {
     e.preventDefault();
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
+    localStorage.removeItem('authToken');
     window.location.href = 'login.html';
   });
 
@@ -76,7 +107,8 @@ async function renderNavMenu(navMenu, username, userId) {
 }
 
 document.addEventListener('DOMContentLoaded', initNav);
-// ---- Floating support widget (WhatsApp + Tidio) ----
+
+// ---- Floating support widget (WhatsApp + live chat) ----
 function injectSupportWidget() {
   if (document.getElementById('supportFloat')) return;
 
@@ -87,10 +119,10 @@ function injectSupportWidget() {
   wrap.id = 'supportFloat';
   wrap.innerHTML = `
     <a class="support-btn whatsapp-btn" href="https://wa.me/${WHATSAPP_NUMBER}" target="_blank" title="Chat on WhatsApp">
-  <svg viewBox="0 0 32 32" width="26" height="26" fill="white">
-    <path d="M16 3C9.373 3 4 8.373 4 15c0 2.485.755 4.79 2.05 6.708L4 29l7.47-1.96A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 21.8c-1.93 0-3.72-.56-5.24-1.53l-.376-.235-4.43 1.163 1.18-4.32-.246-.394A9.77 9.77 0 0 1 5.8 15c0-5.632 4.568-10.2 10.2-10.2S26.2 9.368 26.2 15 21.632 24.8 16 24.8zm5.62-7.64c-.31-.155-1.828-.902-2.11-1.005-.283-.103-.489-.155-.695.155-.206.31-.797 1.005-.978 1.212-.18.206-.36.232-.67.077-.31-.155-1.31-.483-2.494-1.538-.922-.822-1.544-1.838-1.725-2.148-.18-.31-.02-.478.136-.632.14-.14.31-.36.464-.54.155-.18.206-.31.31-.516.103-.206.052-.387-.026-.542-.077-.155-.695-1.674-.953-2.293-.251-.603-.506-.522-.695-.532-.18-.008-.387-.01-.593-.01a1.14 1.14 0 0 0-.824.387c-.283.31-1.08 1.056-1.08 2.575s1.106 2.988 1.26 3.194c.155.206 2.177 3.325 5.276 4.663.737.318 1.312.508 1.76.65.74.235 1.412.202 1.944.123.593-.089 1.828-.747 2.086-1.468.258-.72.258-1.34.18-1.468-.077-.13-.283-.206-.593-.36z"/>
-  </svg>
-</a>
+      <svg viewBox="0 0 32 32" width="26" height="26" fill="white">
+        <path d="M16 3C9.373 3 4 8.373 4 15c0 2.485.755 4.79 2.05 6.708L4 29l7.47-1.96A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 21.8c-1.93 0-3.72-.56-5.24-1.53l-.376-.235-4.43 1.163 1.18-4.32-.246-.394A9.77 9.77 0 0 1 5.8 15c0-5.632 4.568-10.2 10.2-10.2S26.2 9.368 26.2 15 21.632 24.8 16 24.8zm5.62-7.64c-.31-.155-1.828-.902-2.11-1.005-.283-.103-.489-.155-.695.155-.206.31-.797 1.005-.978 1.212-.18.206-.36.232-.67.077-.31-.155-1.31-.483-2.494-1.538-.922-.822-1.544-1.838-1.725-2.148-.18-.31-.02-.478.136-.632.14-.14.31-.36.464-.54.155-.18.206-.31.31-.516.103-.206.052-.387-.026-.542-.077-.155-.695-1.674-.953-2.293-.251-.603-.506-.522-.695-.532-.18-.008-.387-.01-.593-.01a1.14 1.14 0 0 0-.824.387c-.283.31-1.08 1.056-1.08 2.575s1.106 2.988 1.26 3.194c.155.206 2.177 3.325 5.276 4.663.737.318 1.312.508 1.76.65.74.235 1.412.202 1.944.123.593-.089 1.828-.747 2.086-1.468.258-.72.258-1.34.18-1.468-.077-.13-.283-.206-.593-.36z"/>
+      </svg>
+    </a>
     <button class="support-btn chat-btn" id="tidioOpenBtn" title="Live Chat">💬</button>
   `;
   document.body.appendChild(wrap);
