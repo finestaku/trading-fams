@@ -4,92 +4,240 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trading - Crypto Global Trade</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    .trading-wrap {
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 0 20px;
+    body.trading-page { background: #070b14; color: #eae6d9; }
+
+    .tp-wrap {
+      --card: #0f1626;
+      --card2: #131c30;
+      --line: rgba(212, 175, 55, 0.16);
+      --text: #eae6d9;
+      --muted: #8f9ab3;
+      --gold: #d4af37;
+      --up: #2ecc71;
+      --down: #ef4444;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 26px 18px 80px;
+      color: var(--text);
     }
-    .coin-name { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-    .price { font-size: 30px; font-weight: bold; margin: 5px 0 5px 0; }
-    .gain { font-size: 14px; margin-bottom: 15px; font-weight: 600; }
-    .holdings { font-size: 15px; margin-bottom: 12px; line-height: 1.6; }
-    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    input[type="number"] {
-      padding: 8px;
-      font-size: 15px;
-      width: 100px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+    .tp-wrap .tp-up { color: var(--up) !important; }
+    .tp-wrap .tp-down { color: var(--down) !important; }
+
+    .tp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .tp-head h1 { font-family: 'Playfair Display', serif; font-size: 28px; margin: 0; color: #f5efe0; letter-spacing: 0.3px; }
+    .tp-pill {
+      font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--muted); white-space: nowrap;
     }
-    button.buy-btn, button.sell-btn, button.reset-btn {
-      padding: 10px 18px;
-      font-size: 15px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
+    .tp-pill.ok { color: var(--up); border-color: rgba(46,204,113,0.35); }
+    .tp-pill.warn { color: #f0b429; border-color: rgba(240,180,41,0.4); }
+
+    .tp-banner {
+      background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.28); color: #e9dfb8;
+      border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.5; margin-bottom: 16px;
     }
-    .buy-btn { background: #2ecc71; }
-    .sell-btn { background: #e74c3c; }
-    .reset-btn { background: #7f8c8d; margin-top: 10px; margin-bottom: 20px; }
-    .summary {
-      background: var(--summary-bg);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 10px;
-      font-size: 16px;
-      margin-bottom: 20px;
+
+    .tp-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+    .tp-tile {
+      background: linear-gradient(160deg, var(--card2), var(--card));
+      border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
     }
-    #history {
-      background: var(--card-bg);
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    .tp-tile .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 6px; }
+    .tp-tile .val { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #f5efe0; font-variant-numeric: tabular-nums; }
+    .tp-tile .sub { font-size: 12px; margin-top: 2px; color: var(--muted); }
+
+    .tp-alloc { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; }
+    .tp-bar { display: flex; height: 8px; border-radius: 6px; overflow: hidden; background: rgba(255,255,255,0.06); margin-bottom: 10px; }
+    .tp-bar div { height: 100%; transition: width 0.4s ease; }
+    .tp-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+    .tp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .tp-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    .tp-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .tp-tab {
+      text-align: left; cursor: pointer; background: linear-gradient(160deg, var(--card2), var(--card));
+      border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; color: var(--text);
+      font-family: inherit; display: flex; flex-direction: column; gap: 4px;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
     }
-    #history h3 { margin-top: 0; }
-    #historyList { font-size: 14px; padding-left: 18px; }
-    canvas { margin-bottom: 10px; }
+    .tp-tab:hover { transform: translateY(-2px); border-color: rgba(212,175,55,0.45); }
+    .tp-tab.active { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 8px 24px rgba(212,175,55,0.14); }
+    .tp-tab .top { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; }
+    .tp-tab .px { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .tp-tab .ch { font-size: 12px; font-weight: 600; }
+
+    .tp-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+    .tp-panel {
+      background: linear-gradient(160deg, var(--card2), var(--card));
+      border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+    }
+
+    .tp-chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    .tp-coin-title { font-family: 'Playfair Display', serif; font-size: 18px; color: #f5efe0; }
+    .tp-coin-title .sym { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--muted); margin-left: 8px; letter-spacing: 0.6px; }
+    .tp-bigprice { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+    .tp-bigchg { font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.05); white-space: nowrap; }
+    .tp-chartbox { position: relative; width: 100%; height: 320px; }
+    .tp-chartbox canvas { display: block; }
+    .tp-chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; pointer-events: none; }
+    .tp-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    .tp-side { display: grid; grid-template-columns: 1fr 1fr; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 4px; margin-bottom: 16px; }
+    .tp-side button {
+      border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; padding: 10px;
+      border-radius: 8px; cursor: pointer; font-family: inherit; letter-spacing: 0.4px; text-transform: uppercase;
+    }
+    .tp-side button.active.buy { background: var(--up); color: #06210f; }
+    .tp-side button.active.sell { background: var(--down); color: #fff; }
+    .tp-label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.6px; }
+    .tp-input {
+      width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25);
+      color: #fff; font-size: 20px; font-weight: 600; font-family: inherit; box-sizing: border-box; font-variant-numeric: tabular-nums;
+    }
+    .tp-input:focus { outline: none; border-color: var(--gold); }
+    .tp-avail { font-size: 12px; color: var(--muted); margin: 8px 0 12px; }
+    .tp-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+    .tp-quick button {
+      padding: 9px 0; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,0.03);
+      color: var(--text); font-weight: 600; font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+    .tp-quick button:hover { border-color: var(--gold); color: var(--gold); }
+    .tp-est { background: rgba(0,0,0,0.22); border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-bottom: 14px; }
+    .tp-est .row { display: flex; justify-content: space-between; padding: 3px 0; color: var(--muted); gap: 10px; }
+    .tp-est .row b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .tp-est .err { color: #ff8a8a; font-size: 12px; margin-top: 6px; }
+    .tp-submit {
+      width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 800; font-size: 14px;
+      letter-spacing: 0.6px; text-transform: uppercase; cursor: pointer; font-family: inherit;
+    }
+    .tp-submit.buy { background: linear-gradient(135deg, #2ecc71, #1a9c55); color: #04210f; box-shadow: 0 8px 22px rgba(46,204,113,0.2); }
+    .tp-submit.sell { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; box-shadow: 0 8px 22px rgba(239,68,68,0.2); }
+    .tp-submit:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+    .tp-position { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; }
+    .tp-position h4 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); font-weight: 600; }
+    .tp-position .row { display: flex; justify-content: space-between; padding: 4px 0; color: var(--muted); gap: 10px; }
+    .tp-position .row b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .tp-hist-head { margin-bottom: 8px; }
+    .tp-hist-head h3 { margin: 0; font-family: 'Playfair Display', serif; font-size: 18px; color: #f5efe0; }
+    .tp-row { display: grid; grid-template-columns: 62px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+    .tp-row:last-child { border-bottom: none; }
+    .tp-badge { font-size: 11px; font-weight: 800; padding: 5px 0; border-radius: 6px; text-align: center; letter-spacing: 0.5px; }
+    .tp-badge.buy { background: rgba(46,204,113,0.14); color: #2ecc71; }
+    .tp-badge.sell { background: rgba(239,68,68,0.14); color: #ef4444; }
+    .tp-row .mid small, .tp-row .end small { display: block; color: #8f9ab3; font-size: 11px; margin-top: 2px; font-weight: 400; }
+    .tp-row .end { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .tp-empty { color: var(--muted); font-size: 13px; padding: 18px 0; text-align: center; }
+
+    .tp-reset { text-align: center; margin-top: 20px; }
+    .tp-reset button { background: none; border: none; color: var(--muted); font-size: 12px; text-decoration: underline; cursor: pointer; font-family: inherit; }
+
+    .tp-toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+      background: #131c30; color: #eae6d9; border: 1px solid rgba(212,175,55,0.5);
+      padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; opacity: 0;
+      pointer-events: none; transition: all 0.3s ease; z-index: 60; max-width: 90vw; text-align: center;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    }
+    .tp-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .tp-toast.err { border-color: #ef4444; color: #ffb4b4; }
+
+    @media (max-width: 900px) {
+      .tp-grid { grid-template-columns: 1fr; }
+      .tp-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .tp-tabs { grid-template-columns: repeat(2, 1fr); }
+      .tp-chartbox { height: 240px; }
+      .tp-bigprice { font-size: 26px; }
+      .tp-tile .val { font-size: 20px; }
+      .tp-head h1 { font-size: 22px; }
+    }
   </style>
 </head>
-<body>
+<body class="trading-page">
 
   <nav>
     <div class="logo">Crypto Global Trade</div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
-    <div class="nav-menu" id="navMenu">
-      <a href="index.html" data-i18n="nav_home">Home</a>
-      <a href="trading.html" data-i18n="nav_trading">Trading</a>
-      <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
-      <a href="about.html" data-i18n="nav_about">About</a>
-      <div id="authSlot"></div>
-      <div style="padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-        <select id="langSelect" style="width: 100%; padding: 6px; border-radius: 6px;"></select>
-      </div>
-    </div>
+    <div class="nav-menu" id="navMenu"></div>
   </nav>
 
-  <div class="trading-wrap">
-    <div class="summary">
-      Cash: $<span id="cash">10000</span> &nbsp;|&nbsp;
-      Total Profit/Loss: $<span id="profitLoss">0.00</span> &nbsp;|&nbsp;
-      Best Score: $<span id="bestScore">0.00</span>
+  <div class="tp-wrap">
+
+    <div class="tp-head">
+      <h1>Trading Floor</h1>
+      <span class="tp-pill" id="livePill">● Connecting…</span>
     </div>
 
-    <div id="coinCards"></div>
+    <div class="tp-banner" id="banner">Connecting to the trading server… the first load can take up to a minute.</div>
 
-    <button class="reset-btn" id="resetBtn">Reset Everything</button>
-
-    <div id="history">
-      <h3>Transaction History</h3>
-      <ul id="historyList"></ul>
+    <div class="tp-summary">
+      <div class="tp-tile"><div class="lbl">Trading Cash</div><div class="val" id="sumCash">…</div><div class="sub">Available to trade</div></div>
+      <div class="tp-tile"><div class="lbl">Portfolio Value</div><div class="val" id="sumValue">…</div><div class="sub">Cash + coins at live prices</div></div>
+      <div class="tp-tile"><div class="lbl">Profit / Loss</div><div class="val" id="sumPL">…</div><div class="sub" id="sumPLsub">&nbsp;</div></div>
+      <div class="tp-tile"><div class="lbl">Best Score</div><div class="val" id="sumBest">…</div><div class="sub">Highest profit reached</div></div>
     </div>
+
+    <div class="tp-alloc">
+      <div class="tp-bar" id="allocBar"></div>
+      <div class="tp-legend" id="allocLegend"></div>
+    </div>
+
+    <div class="tp-tabs" id="coinTabs"></div>
+
+    <div class="tp-grid">
+      <div class="tp-panel">
+        <div class="tp-chart-head">
+          <div>
+            <div class="tp-coin-title" id="coinTitle">Bitcoin<span class="sym">BTC</span></div>
+            <div class="tp-bigprice" id="bigPrice">—</div>
+          </div>
+          <div class="tp-bigchg" id="bigChange">—</div>
+        </div>
+        <div class="tp-chartbox" id="chartBox">
+          <canvas id="priceChart"></canvas>
+          <div class="tp-chart-empty" id="chartEmpty">Collecting live prices…</div>
+        </div>
+        <div class="tp-note">Live chart. Updates every 10 seconds and remembers the last hour on this device.</div>
+      </div>
+
+      <div class="tp-panel">
+        <div class="tp-side">
+          <button class="buy active" id="buyTab">Buy</button>
+          <button class="sell" id="sellTab">Sell</button>
+        </div>
+        <label class="tp-label" for="amountInput">Amount (USD)</label>
+        <input class="tp-input" id="amountInput" type="number" inputmode="decimal" placeholder="0.00" min="0" step="any" autocomplete="off">
+        <div class="tp-avail" id="availLine"></div>
+        <div class="tp-quick" id="quickBtns">
+          <button data-pct="25">25%</button>
+          <button data-pct="50">50%</button>
+          <button data-pct="75">75%</button>
+          <button data-pct="100">100%</button>
+        </div>
+        <div class="tp-est" id="estBox"></div>
+        <button class="tp-submit buy" id="submitBtn" disabled>Buy BTC</button>
+        <div class="tp-position" id="positionBox"></div>
+      </div>
+    </div>
+
+    <div class="tp-panel">
+      <div class="tp-hist-head"><h3>Your Recent Trades</h3></div>
+      <div id="historyList"></div>
+    </div>
+
+    <div class="tp-reset"><button id="resetBtn">Reset my trading account</button></div>
+
   </div>
+
+  <div class="tp-toast" id="toast"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="nav.js"></script>
