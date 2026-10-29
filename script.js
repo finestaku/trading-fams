@@ -14,7 +14,6 @@ const COINS = [
 
 const userId = localStorage.getItem('userId');
 const authToken = localStorage.getItem('authToken');
-const TRADES_KEY = 'cgt_trades_' + userId;
 const PRICE_KEY = 'cgt_price_hist';
 
 let cash = 0;
@@ -28,9 +27,8 @@ const priceHistory = {};
 let tradeHistory = [];
 
 let loaded = false;
-let needsSave = false;
-let saving = false;
-let saveAgain = false;
+let busy = false;
+let accountVersion = 0;
 let failedPolls = 0;
 let selected = 'btc';
 let mode = 'buy';
@@ -76,6 +74,7 @@ function timeStr(t) {
   return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
 }
 function dateStr(t) {
+  if (!t || isNaN(t)) return '';
   return new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 function hexToRgba(hex, a) {
@@ -124,63 +123,78 @@ function loadPriceHistory() {
 function savePriceHistory() { lsSet(PRICE_KEY, priceHistory); }
 
 // ---------- server ----------
-async function loadFromServer() {
-  const res = await fetch(API_BASE + '/api/data/' + userId);
-  if (!res.ok) throw new Error('load failed ' + res.status);
-  const data = await res.json();
+function applyAccount(data) {
   cash = Number(data.cash) || 0;
   holdings = Object.assign(emptyMap(), data.holdings || {});
   invested = Object.assign(emptyMap(), data.invested || {});
   bestScore = Number(data.best_score) || 0;
   startingCash = Number(data.starting_cash) || 0;
-  loaded = true;
+  accountVersion++;
 }
 
-async function saveToServer() {
-  if (!loaded) return;
-  if (saving) { saveAgain = true; return; }
-  saving = true;
+async function loadAccount() {
+  const res = await fetch(API_BASE + '/api/data/' + userId);
+  if (!res.ok) throw new Error('load failed ' + res.status);
+  applyAccount(await res.json());
+}
+
+async function loadTrades() {
   try {
-    const res = await fetch(API_BASE + '/api/data/' + userId, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cash: cash, holdings: holdings, invested: invested, bestScore: bestScore })
-    });
-    if (!res.ok) throw new Error('save failed');
-    needsSave = false;
-  } catch (err) {
-    needsSave = true;
+    const res = await fetch(API_BASE + '/api/data/' + userId + '/trades');
+    if (!res.ok) return;
+    const data = await res.json();
+    tradeHistory = (data.trades || []).map((t) => ({
+      t: Date.parse(String(t.created_at).replace(' ', 'T') + 'Z'),
+      action: t.action,
+      sym: t.coin,
+      amount: t.amount_usd,
+      qty: t.qty,
+      price: t.price
+    }));
+    renderHistory();
+  } catch (e) {}
+}
+
+function updateBanner() {
+  const empty = cash <= 0 && COINS.every((c) => holdings[c.sym] <= 0);
+  if (empty) {
+    showBanner('Your trading cash is $0. Move funds from your Wallet page, or ask an admin to credit your account. It will appear here automatically.');
+  } else {
+    hideBanner();
   }
-  saving = false;
-  if (saveAgain) { saveAgain = false; saveToServer(); }
-}
-
-async function logTransaction(action, coin, amountUsd, fee) {
-  try {
-    await fetch(API_BASE + '/api/transactions/' + userId, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: action, coin: coin, amountUsd: amountUsd, fee: fee })
-    });
-  } catch (err) {}
 }
 
 async function connect() {
   for (let attempt = 0; attempt < 8 && !loaded; attempt++) {
-    try { await loadFromServer(); }
-    catch (e) { await new Promise((r) => setTimeout(r, 4000)); }
+    try {
+      await loadAccount();
+      loaded = true;
+    } catch (e) {
+      await new Promise((r) => setTimeout(r, 4000));
+    }
   }
   if (!loaded) {
     showBanner('We could not reach the trading server. Please refresh the page in a moment.');
     return;
   }
-  const empty = cash <= 0 && COINS.every((c) => holdings[c.sym] <= 0);
-  if (empty) {
-    showBanner('Your trading cash is $0. Ask an admin to credit your account. Your balance will appear here as soon as it is added.');
-  } else {
-    hideBanner();
-  }
+  updateBanner();
   updateAll();
+  loadTrades();
+}
+
+// Keeps the page in sync (admin credits, wallet transfers, best score)
+async function refreshAccount() {
+  if (!loaded || busy || document.hidden) return;
+  const version = accountVersion;
+  try {
+    const res = await fetch(API_BASE + '/api/data/' + userId);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (busy || version !== accountVersion) return;
+    applyAccount(data);
+    updateBanner();
+    updateAll();
+  } catch (e) {}
 }
 
 async function fetchPrices() {
@@ -202,7 +216,6 @@ async function fetchPrices() {
     setPill(true);
     updateAll();
     renderChart();
-    if (needsSave && loaded) saveToServer();
   } catch (err) {
     failedPolls++;
     if (failedPolls >= 2) setPill(false);
@@ -341,12 +354,10 @@ function updateAll() {
   const noCoins = COINS.every((c) => holdings[c.sym] <= 0);
   const showPortfolio = loaded && (pricesReady || noCoins);
   const pv = portfolioValue();
-  const pl = pv - startingCash;
+  const pl = startingCash > 0 ? pv - startingCash : 0;
 
-  if (showPortfolio && startingCash > 0 && pl > bestScore + 0.005) {
-    bestScore = pl;
-    needsSave = true;
-  }
+  let shownBest = bestScore;
+  if (showPortfolio && startingCash > 0 && pl > shownBest) shownBest = pl;
 
   $('sumCash').textContent = loaded ? fmtUSD(cash) : '…';
   $('sumValue').textContent = showPortfolio ? fmtUSD(pv) : '…';
@@ -356,13 +367,13 @@ function updateAll() {
     plEl.textContent = fmtSigned(pl);
     plEl.className = 'val ' + cls;
     $('sumPLsub').textContent = startingCash > 0
-      ? fmtPct((pl / startingCash) * 100) + ' on your starting balance'
+      ? fmtPct((pl / startingCash) * 100) + ' on your funded balance'
       : 'Starts once your account is credited';
   } else {
     plEl.textContent = '…';
     plEl.className = 'val';
   }
-  $('sumBest').textContent = loaded ? fmtUSD(bestScore) : '…';
+  $('sumBest').textContent = loaded ? fmtUSD(shownBest) : '…';
 
   COINS.forEach((c) => {
     $('tabPx-' + c.sym).textContent = fmtPrice(prices[c.sym]);
@@ -433,7 +444,7 @@ function updateTradePanel() {
 
   const submit = $('submitBtn');
   submit.className = 'tp-submit ' + mode;
-  submit.textContent = (mode === 'buy' ? 'Buy ' : 'Sell ') + SYM;
+  submit.textContent = busy ? 'Processing…' : (mode === 'buy' ? 'Buy ' : 'Sell ') + SYM;
 
   if (!loaded) {
     $('availLine').textContent = 'Loading your balance…';
@@ -460,7 +471,7 @@ function updateTradePanel() {
   }
   if (err) html += '<div class="err">' + err + '</div>';
   $('estBox').innerHTML = html;
-  submit.disabled = !(loaded && order && !err);
+  submit.disabled = !(loaded && !busy && order && !err);
 }
 
 function renderHistory() {
@@ -469,20 +480,16 @@ function renderHistory() {
     el.innerHTML = '<div class="tp-empty">No trades yet. Your trades will appear here.</div>';
     return;
   }
-  el.innerHTML = tradeHistory.map((t) =>
-    '<div class="tp-row">' +
+  el.innerHTML = tradeHistory.map((t) => {
+    const sym = String(t.sym).toUpperCase();
+    const qtyText = t.qty ? fmtQty(t.qty) + ' ' + sym : sym;
+    const priceText = t.price ? '@ ' + fmtPrice(t.price) : '';
+    return '<div class="tp-row">' +
       '<span class="tp-badge ' + (t.action === 'buy' ? 'buy' : 'sell') + '">' + (t.action === 'buy' ? 'BUY' : 'SELL') + '</span>' +
-      '<span class="mid">' + fmtQty(t.qty) + ' ' + String(t.sym).toUpperCase() + '<small>@ ' + fmtPrice(t.price) + '</small></span>' +
+      '<span class="mid">' + qtyText + '<small>' + priceText + '</small></span>' +
       '<span class="end">' + fmtUSD(t.amount) + '<small>' + dateStr(t.t) + '</small></span>' +
-    '</div>'
-  ).join('');
-}
-
-function addHistory(entry) {
-  tradeHistory.unshift(entry);
-  tradeHistory = tradeHistory.slice(0, 40);
-  lsSet(TRADES_KEY, tradeHistory);
-  renderHistory();
+    '</div>';
+  }).join('');
 }
 
 // ---------- actions ----------
@@ -520,51 +527,70 @@ function applyQuick(pct) {
   updateTradePanel();
 }
 
-function executeTrade() {
-  if (!loaded) { toast('Still connecting to your account…', true); return; }
+// The server makes the final call on price, fee and balances
+async function executeTrade() {
+  if (!loaded || busy) return;
   const o = computeOrder();
   if (!o) { toast('Enter an amount first', true); return; }
   const err = validateOrder(o);
   if (err) { toast(err, true); return; }
 
-  const sym = o.sym;
-  if (mode === 'buy') {
-    cash -= o.amount + o.fee;
-    holdings[sym] += o.qty;
-    invested[sym] += o.amount;
-  } else {
-    const before = holdings[sym];
-    const qty = Math.min(o.qty, before);
-    holdings[sym] = before - qty;
-    cash += o.amount - o.fee;
-    invested[sym] = before > 0 ? invested[sym] * (holdings[sym] / before) : 0;
-    if (holdings[sym] < 1e-12) { holdings[sym] = 0; invested[sym] = 0; }
+  const side = mode;
+  busy = true;
+  updateTradePanel();
+  try {
+    const res = await fetch(API_BASE + '/api/data/' + userId + '/trade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: side, coin: o.sym, amountUsd: o.amount, sellAll: o.sellAll })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast(data.error || 'Trade failed. Please try again.', true);
+    } else {
+      applyAccount(data);
+      const t = data.trade;
+      tradeHistory.unshift({ t: Date.now(), action: t.action, sym: t.sym, amount: t.amountUsd, qty: t.qty, price: t.price });
+      tradeHistory = tradeHistory.slice(0, 40);
+      renderHistory();
+      updateBanner();
+      $('amountInput').value = '';
+      pendingSellAll = null;
+      toast((t.action === 'buy' ? 'Bought ' : 'Sold ') + fmtQty(t.qty) + ' ' + t.sym.toUpperCase() + ' for ' + fmtUSD(t.amountUsd));
+    }
+  } catch (e) {
+    toast('Could not reach the server. Please try again.', true);
   }
-  if (cash < 0 && cash > -1e-9) cash = 0;
-
-  addHistory({ t: Date.now(), action: mode, sym: sym, amount: o.amount, qty: o.qty, price: o.price });
-  logTransaction(mode, sym, o.amount, o.fee);
-  needsSave = true;
-  saveToServer();
-
-  $('amountInput').value = '';
-  pendingSellAll = null;
+  busy = false;
   updateAll();
-  toast((mode === 'buy' ? 'Bought ' : 'Sold ') + fmtQty(o.qty) + ' ' + sym.toUpperCase() + ' for ' + fmtUSD(o.amount));
 }
 
-function resetAccount() {
-  if (!loaded) return;
-  if (!confirm('Reset your trading account? All coins will be removed and your cash will return to your starting balance.')) return;
-  cash = startingCash;
-  COINS.forEach((c) => { holdings[c.sym] = 0; invested[c.sym] = 0; });
-  tradeHistory = [];
-  lsSet(TRADES_KEY, []);
-  needsSave = true;
-  saveToServer();
-  renderHistory();
+async function sellEverything() {
+  if (!loaded || busy) return;
+  if (!COINS.some((c) => holdings[c.sym] > 0)) { toast('You have no coins to sell', true); return; }
+  if (!confirm('Sell all your coins at current prices? A 0.5% fee applies to each sale.')) return;
+
+  busy = true;
+  updateTradePanel();
+  try {
+    const res = await fetch(API_BASE + '/api/data/' + userId + '/sell-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast(data.error || 'Could not sell holdings. Please try again.', true);
+    } else {
+      applyAccount(data);
+      await loadTrades();
+      toast('All holdings sold');
+    }
+  } catch (e) {
+    toast('Could not reach the server. Please try again.', true);
+  }
+  busy = false;
   updateAll();
-  toast('Trading account reset');
 }
 
 // ---------- setup ----------
@@ -593,7 +619,11 @@ function bindEvents() {
     if (b) applyQuick(Number(b.dataset.pct));
   });
   $('submitBtn').addEventListener('click', executeTrade);
-  $('resetBtn').addEventListener('click', resetAccount);
+  $('resetBtn').addEventListener('click', sellEverything);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshAccount();
+  });
 
   // Only resize the chart when the WIDTH changes (not when a phone keyboard opens)
   window.addEventListener('resize', () => {
@@ -620,8 +650,8 @@ function init() {
     priceHistory[c.sym] = [];
   });
   loadPriceHistory();
-  tradeHistory = lsGet(TRADES_KEY, []);
-  if (!Array.isArray(tradeHistory)) tradeHistory = [];
+
+  $('resetBtn').textContent = 'Sell all holdings';
 
   buildTabs();
   createChart();
@@ -633,6 +663,7 @@ function init() {
   connect();
   fetchPrices();
   setInterval(fetchPrices, POLL_MS);
+  setInterval(refreshAccount, 60000);
 }
 
 if (userId && authToken) {

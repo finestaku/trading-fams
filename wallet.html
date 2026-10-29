@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wallet - Crypto Global Trade</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
@@ -45,6 +45,12 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-top: 6px;
+    }
+    .growth-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
     }
     .wallet-card {
       background: var(--card-bg);
@@ -94,7 +100,13 @@
       padding: 6px 12px !important;
       margin-top: 8px !important;
     }
-    #depositMsg, #withdrawMsg, #saveAddrMsg { font-size: 13px; margin-top: 10px; }
+    .ghost-btn {
+      background: var(--summary-bg) !important;
+      color: #f0ead6 !important;
+    }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tx-balances { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    #depositMsg, #withdrawMsg, #saveAddrMsg, #transferMsg { font-size: 13px; margin-top: 10px; }
     .requests-list { margin-top: 10px; }
     .request-row {
       display: flex;
@@ -122,25 +134,32 @@
   <nav>
     <div class="logo">Crypto Global Trade</div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
-    <div class="nav-menu" id="navMenu">
-      <a href="index.html">Home</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="trading.html">Trading</a>
-      <a href="wallet.html">Wallet</a>
-      <a href="leaderboard.html">Leaderboard</a>
-      <a href="support.html">Support</a>
-    </div>
+    <div class="nav-menu" id="navMenu"></div>
   </nav>
 
   <div class="wallet-wrap">
 
     <div class="disclaimer-banner">
-      ⚠️ This is a <strong> wallet balance</strong> for trading purposes only. cryptocurrency or funds are transferred. All deposits and withdrawals are reviewed and confirmed manually by an admin before your balance updates.
+      ⚠️ This is a <strong>simulated wallet</strong> for demo purposes only. No real cryptocurrency or funds are transferred. All deposits and withdrawals are reviewed and confirmed manually by an admin before your balance updates.
     </div>
 
     <div class="balance-card">
       <div class="value">$<span id="walletBalance">0.00</span></div>
       <div class="label">Wallet Balance</div>
+      <div class="growth-note">Simulated growth: wallet balances increase 5% every 24 hours. This is a demo mechanic for this practice platform, not real investment yield.</div>
+    </div>
+
+    <div class="wallet-card">
+      <h3>Move Funds to Trading Cash</h3>
+      <p style="font-size:12px; color:var(--muted); margin-top:0;">Transfer money from your wallet balance into your trading cash so you can trade with it. This move is one-way.</p>
+      <div class="tx-balances">Wallet: $<span id="tWallet">0.00</span> &nbsp;·&nbsp; Trading cash: $<span id="tCash">0.00</span></div>
+      <label>Amount (USD)</label>
+      <input type="number" id="transferAmount" placeholder="e.g. 250" min="0" step="any">
+      <div class="btn-row">
+        <button id="transferMaxBtn" class="ghost-btn" type="button">Max</button>
+        <button id="transferBtn" type="button">Move to Trading Cash</button>
+      </div>
+      <p id="transferMsg"></p>
     </div>
 
     <div class="wallet-card">
@@ -173,7 +192,7 @@
 
     <div class="wallet-card">
       <h3>Your Reference Address (optional)</h3>
-      <p style="font-size:12px; color:var(--muted); margin-top:0;">Connected to blockchain — for record-keeping only.</p>
+      <p style="font-size:12px; color:var(--muted); margin-top:0;">Not connected to any real blockchain — for your own record-keeping only.</p>
       <input type="text" id="userAddress" placeholder="Save your own wallet address for reference">
       <button id="saveAddrBtn">Save</button>
       <p id="saveAddrMsg"></p>
@@ -194,11 +213,20 @@
 
     let companyWallets = {};
     let depositQrInstance = null;
+    let walletBalanceNow = 0;
+    let transferUseAll = false;
+
+    function setBalances(wallet, cash) {
+      walletBalanceNow = wallet;
+      document.getElementById('walletBalance').textContent = wallet.toFixed(2);
+      document.getElementById('tWallet').textContent = wallet.toFixed(2);
+      document.getElementById('tCash').textContent = cash.toFixed(2);
+    }
 
     async function loadWalletData() {
       const res = await fetch(`${API}/api/data/${userId}`);
       const data = await res.json();
-      document.getElementById('walletBalance').textContent = (data.wallet_balance || 0).toFixed(2);
+      setBalances(data.wallet_balance || 0, data.cash || 0);
       document.getElementById('userAddress').value = data.user_wallet_address || '';
     }
 
@@ -227,6 +255,49 @@
       const btn = document.getElementById('copyAddrBtn');
       btn.textContent = 'Copied!';
       setTimeout(() => btn.textContent = 'Copy Address', 1500);
+    });
+
+    document.getElementById('transferAmount').addEventListener('input', () => { transferUseAll = false; });
+
+    document.getElementById('transferMaxBtn').addEventListener('click', () => {
+      transferUseAll = true;
+      document.getElementById('transferAmount').value = (Math.floor(walletBalanceNow * 100) / 100).toFixed(2);
+    });
+
+    document.getElementById('transferBtn').addEventListener('click', async () => {
+      const msgEl = document.getElementById('transferMsg');
+      const amount = Number(document.getElementById('transferAmount').value);
+
+      if (!transferUseAll && !(amount > 0)) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Enter an amount to move.';
+        return;
+      }
+
+      msgEl.style.color = 'var(--muted)';
+      msgEl.textContent = 'Moving funds...';
+
+      try {
+        const res = await fetch(`${API}/api/wallet/transfer/${userId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(transferUseAll ? { all: true } : { amount })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setBalances(data.wallet_balance, data.cash);
+          document.getElementById('transferAmount').value = '';
+          transferUseAll = false;
+          msgEl.style.color = '#2ecc71';
+          msgEl.textContent = `Moved $${data.moved.toFixed(2)} to your trading cash. You can trade with it now.`;
+        } else {
+          msgEl.style.color = '#e74c3c';
+          msgEl.textContent = data.error || 'Transfer failed.';
+        }
+      } catch (err) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Could not reach the server. Please try again.';
+      }
     });
 
     document.getElementById('depositBtn').addEventListener('click', async () => {
