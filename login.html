@@ -86,6 +86,7 @@
       font-size: 13px;
       color: var(--muted);
       margin-bottom: 26px;
+      line-height: 1.5;
     }
     .gate-box input {
       width: 100%;
@@ -109,10 +110,13 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    #loginBtn { background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; }
+    .gate-box button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #loginBtn, #forgotBtn { background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; }
     #signupBtn { background: var(--summary-bg); color: #f0ead6; }
     #loginError { color: #e74c3c; font-size: 13px; text-align: center; min-height: 18px; }
+    #forgotMsg { font-size: 13px; text-align: center; min-height: 18px; line-height: 1.5; }
     .gate-box .hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; }
+    .gate-box .hint a { color: var(--accent); font-weight: 600; text-decoration: underline; }
     .gate-disclaimer {
       font-size: 11px;
       color: var(--muted);
@@ -144,15 +148,28 @@
 
     <div class="gate-right">
       <div class="gate-box">
-        <h2>Welcome</h2>
-        <p class="subtext">Sign in to your account, or create a new one to get started.</p>
-        <input type="text" id="username" placeholder="Username">
-        <input type="email" id="email" placeholder="Email (for sign up only)">
-        <input type="password" id="password" placeholder="Password">
-        <button id="loginBtn">Sign In</button>
-        <button id="signupBtn">Create Account</button>
-        <p id="loginError"></p>
-        <p class="hint">Forgot your password? Contact support to have it reset.</p>
+
+        <div id="loginView">
+          <h2>Welcome</h2>
+          <p class="subtext">Sign in to your account, or create a new one to get started.</p>
+          <input type="text" id="username" placeholder="Username" autocomplete="username">
+          <input type="email" id="email" placeholder="Email (needed to reset your password)" autocomplete="email">
+          <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+          <button id="loginBtn">Sign In</button>
+          <button id="signupBtn">Create Account</button>
+          <p id="loginError"></p>
+          <p class="hint"><a href="#" id="forgotLink">Forgot your password?</a></p>
+        </div>
+
+        <div id="forgotView" style="display:none;">
+          <h2>Reset your password</h2>
+          <p class="subtext">Enter your email or username and we'll email you a link to choose a new password.</p>
+          <input type="text" id="forgotIdentifier" placeholder="Email or username" autocomplete="username">
+          <button id="forgotBtn">Send Reset Link</button>
+          <p id="forgotMsg"></p>
+          <p class="hint"><a href="#" id="backToLogin">Back to sign in</a></p>
+        </div>
+
         <p class="gate-disclaimer">This is a simulated trading platform. No real money or cryptocurrency is ever transferred. All balances are virtual.</p>
       </div>
     </div>
@@ -160,6 +177,11 @@
 
   <script>
     const API = 'https://crypto-global-trade-backend.onrender.com';
+
+    function showView(which) {
+      document.getElementById('loginView').style.display = which === 'login' ? 'block' : 'none';
+      document.getElementById('forgotView').style.display = which === 'forgot' ? 'block' : 'none';
+    }
 
     async function attempt(endpoint) {
       const username = document.getElementById('username').value;
@@ -195,6 +217,64 @@
 
     document.getElementById('loginBtn').addEventListener('click', () => attempt('api/login'));
     document.getElementById('signupBtn').addEventListener('click', () => attempt('api/signup'));
+    document.getElementById('password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') attempt('api/login');
+    });
+
+    document.getElementById('forgotLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      const typed = document.getElementById('email').value.trim() || document.getElementById('username').value.trim();
+      if (typed) document.getElementById('forgotIdentifier').value = typed;
+      showView('forgot');
+    });
+
+    document.getElementById('backToLogin').addEventListener('click', (e) => {
+      e.preventDefault();
+      showView('login');
+    });
+
+    async function sendResetLink() {
+      const identifier = document.getElementById('forgotIdentifier').value.trim();
+      const msgEl = document.getElementById('forgotMsg');
+      const btn = document.getElementById('forgotBtn');
+
+      if (!identifier) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Enter your email or username.';
+        return;
+      }
+
+      btn.disabled = true;
+      msgEl.style.color = 'var(--muted)';
+      msgEl.textContent = 'Sending… (the first request can take up to a minute)';
+
+      try {
+        const res = await fetch(`${API}/api/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          msgEl.style.color = '#2ecc71';
+          msgEl.textContent = data.message;
+        } else {
+          msgEl.style.color = '#e74c3c';
+          msgEl.textContent = data.error || 'Something went wrong. Please try again.';
+        }
+      } catch (err) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Could not reach server. Please try again in a moment.';
+      }
+      btn.disabled = false;
+    }
+
+    document.getElementById('forgotBtn').addEventListener('click', sendResetLink);
+    document.getElementById('forgotIdentifier').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendResetLink();
+    });
+
+    if (window.location.hash === '#forgot') showView('forgot');
   </script>
 
 </body>
