@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Crypto Global Trade</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
     .dash-wrap {
@@ -22,7 +22,7 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    .dash-header h1 { font-size: 28px; margin: 0; display: flex; align-items: center; gap: 8px; }
+    .dash-header h1 { font-size: 28px; margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .dash-header p { margin: 4px 0 0 0; color: var(--muted); font-size: 14px; }
     .verified-badge-svg {
       width: 22px;
@@ -34,7 +34,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 18px;
-      margin-bottom: 36px;
+      margin-bottom: 30px;
     }
     .summary-card {
       background: var(--card-bg);
@@ -56,6 +56,67 @@
       letter-spacing: 0.5px;
       margin-top: 6px;
     }
+
+    .pos { color: #2ecc71; }
+    .neg { color: #ef4444; }
+
+    .perf-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+    .perf-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .perf-head h3 { margin: 0; }
+    .perf-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .perf-sub b { font-weight: 700; }
+    .perf-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+    .seg {
+      display: inline-flex;
+      background: rgba(128, 128, 128, 0.12);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .seg button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .seg button.active {
+      background: linear-gradient(135deg, #d4af37, #a67c00);
+      color: #0d1321;
+    }
+    .perf-chartbox { position: relative; height: 280px; }
+    .perf-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 24px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      pointer-events: none;
+    }
+    .perf-note { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+
     .quick-actions {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -100,10 +161,11 @@
       text-decoration: underline;
       cursor: pointer;
     }
-    .unverified-note {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
+
+    @media (max-width: 640px) {
+      .dash-header h1 { font-size: 22px; }
+      .perf-chartbox { height: 220px; }
+      .perf-card { padding: 18px; }
     }
   </style>
 </head>
@@ -112,14 +174,7 @@
   <nav>
     <div class="logo">Crypto Global Trade</div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
-    <div class="nav-menu" id="navMenu">
-      <a href="index.html">Home</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="trading.html">Trading</a>
-      <a href="wallet.html">Wallet</a>
-      <a href="leaderboard.html">Leaderboard</a>
-      <a href="support.html">Support</a>
-    </div>
+    <div class="nav-menu" id="navMenu"></div>
   </nav>
 
   <div class="dash-wrap">
@@ -150,6 +205,32 @@
       </div>
     </div>
 
+    <div class="perf-card">
+      <div class="perf-head">
+        <div>
+          <h3>Portfolio Performance</h3>
+          <div class="perf-sub">Profit / Loss now: <b id="perfPL">…</b></div>
+        </div>
+        <div class="perf-controls">
+          <div class="seg" id="modeSeg">
+            <button data-mode="pl" class="active">Profit / Loss</button>
+            <button data-mode="value">Value</button>
+          </div>
+          <div class="seg" id="rangeSeg">
+            <button data-range="1h">1H</button>
+            <button data-range="1d" class="active">1D</button>
+            <button data-range="1w">1W</button>
+            <button data-range="all">All</button>
+          </div>
+        </div>
+      </div>
+      <div class="perf-chartbox">
+        <canvas id="perfCanvas"></canvas>
+        <div class="perf-empty" id="perfEmpty">Loading your performance…</div>
+      </div>
+      <div class="perf-note">Points are saved when you trade, move funds, or use the platform, so the chart fills in over time. Profit / Loss excludes deposits and admin credits.</div>
+    </div>
+
     <div class="quick-actions">
       <a href="trading.html" class="action-card">
         <div class="icon">📈</div>
@@ -175,20 +256,70 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="nav.js"></script>
   <script>
     const API = 'https://crypto-global-trade-backend.onrender.com';
     const userId = localStorage.getItem('userId');
-    let username = localStorage.getItem('username');
+    const username = localStorage.getItem('username');
     if (!userId) window.location.href = 'login.html';
 
-    document.getElementById('logoutLink').addEventListener('click', () => {
-      localStorage.removeItem('userId');
-      localStorage.removeItem('username');
-      window.location.href = 'login.html';
-    });
+    const SYMS = ['btc', 'eth', 'sol', 'doge'];
 
-    const COIN_NAMES = { btc: 'bitcoin', eth: 'ethereum', sol: 'solana', doge: 'dogecoin' };
+    let account = null;
+    let prices = null;
+    let liveValue = 0;
+    let liveBase = 0;
+    let liveReady = false;
+
+    let perfChart = null;
+    let perfMode = 'pl';
+    let perfRange = '1d';
+    let perfColor = '#d4af37';
+    let historyPoints = [];
+    let historyLoaded = false;
+    let historyError = false;
+    let historySeq = 0;
+
+    // ---------- helpers ----------
+    const $ = (id) => document.getElementById(id);
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    function num(n) {
+      return (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function fmtMoney(n) {
+      const v = Number(n) || 0;
+      return (v < 0 ? '-' : '') + '$' + num(Math.abs(v));
+    }
+    function fmtSigned(n) {
+      const v = Number(n) || 0;
+      return (v >= 0 ? '+' : '-') + '$' + num(Math.abs(v));
+    }
+    function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+    function fmtTick(v) {
+      const a = Math.abs(v);
+      const body = a >= 1000 ? Math.round(a).toLocaleString('en-US') : a.toFixed(2);
+      return (v < 0 ? '-' : '') + '$' + body;
+    }
+    function fmtAxisTime(ms, span) {
+      const d = new Date(ms);
+      if (span <= 36 * 3600 * 1000) return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+    function fmtFullTime(ms) {
+      return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    function hexToRgba(hex, a) {
+      const h = hex.replace('#', '');
+      const full = h.length === 3 ? h.split('').map((x) => x + x).join('') : h;
+      const n = parseInt(full, 16);
+      return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+    }
+    function cssVar(name, fallback) {
+      const v = getComputedStyle(document.body).getPropertyValue(name).trim();
+      return v || fallback;
+    }
 
     function badgeSvg(color) {
       return `
@@ -200,47 +331,328 @@
       `;
     }
 
-    async function loadDashboard() {
-      const res = await fetch(`${API}/api/data/${userId}`);
-      const data = await res.json();
-
-      document.getElementById('usernameDisplay').textContent = data.username || username;
-      document.getElementById('cashValue').textContent = data.cash.toFixed(2);
-      document.getElementById('bestScoreValue').textContent = (data.best_score || 0).toFixed(2);
-      document.getElementById('walletValue').textContent = (data.wallet_balance || 0).toFixed(2);
-
-      if (data.verification_tier === 'gold') {
-        document.getElementById('verifiedBadge').innerHTML = badgeSvg('#d4af37');
-      } else if (data.verification_tier === 'blue') {
-        document.getElementById('verifiedBadge').innerHTML = badgeSvg('#3b82f6');
-      } else {
-        document.getElementById('verifiedNote').textContent = 'Account not verified yet.';
+    // Evenly spaced, clock-aligned ticks for the time axis
+    function niceTimeTicks(min, max) {
+      const MIN = 60000;
+      const HOUR = 3600000;
+      const DAY = 86400000;
+      const steps = [MIN, 5 * MIN, 10 * MIN, 15 * MIN, 30 * MIN, HOUR, 2 * HOUR, 3 * HOUR, 6 * HOUR, 12 * HOUR, DAY, 2 * DAY, 7 * DAY, 14 * DAY, 30 * DAY];
+      const span = max - min;
+      let step = steps[steps.length - 1];
+      for (let i = 0; i < steps.length; i++) {
+        if (span / steps[i] <= 6) { step = steps[i]; break; }
       }
-
-      const ids = Object.values(COIN_NAMES).join(',');
-      const priceRes = await fetch(`https://crypto-global-trade-backend.onrender.com/api/prices`);
-      const prices = await priceRes.json();
-
-      let portfolioValue = data.cash;
-      const holdingsList = document.getElementById('holdingsList');
-      holdingsList.innerHTML = '';
-
-      Object.keys(data.holdings).forEach(sym => {
-        const amount = data.holdings[sym];
-        const price = prices[COIN_NAMES[sym]].usd;
-        const value = amount * price;
-        portfolioValue += value;
-
-        const row = document.createElement('div');
-        row.className = 'holding-row';
-        row.innerHTML = `<span>${sym.toUpperCase()}: ${amount.toFixed(6)}</span><span>$${value.toFixed(2)}</span>`;
-        holdingsList.appendChild(row);
-      });
-
-      document.getElementById('portfolioValue').textContent = portfolioValue.toFixed(2);
+      const offset = new Date(min).getTimezoneOffset() * MIN;
+      let t = Math.ceil((min - offset) / step) * step + offset;
+      const ticks = [];
+      for (; t <= max && ticks.length < 12; t += step) ticks.push(t);
+      return ticks;
     }
 
-    loadDashboard();
+    // ---------- account + prices ----------
+    async function fetchPrices() {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(`${API}/api/prices`);
+          if (!res.ok) throw new Error('bad status');
+          const d = await res.json();
+          if (d && d.bitcoin && d.ethereum && d.solana && d.dogecoin) {
+            prices = { btc: d.bitcoin.usd, eth: d.ethereum.usd, sol: d.solana.usd, doge: d.dogecoin.usd };
+            return true;
+          }
+        } catch (e) {}
+        await new Promise((r) => setTimeout(r, 2500));
+      }
+      return false;
+    }
+
+    function computeLive() {
+      const h = account.holdings || {};
+      const hasCoins = SYMS.some((s) => (Number(h[s]) || 0) > 0);
+      if (hasCoins && !prices) { liveReady = false; return; }
+      let v = Number(account.cash) || 0;
+      SYMS.forEach((s) => { if (prices && prices[s]) v += (Number(h[s]) || 0) * prices[s]; });
+      liveValue = v;
+      liveBase = Number(account.starting_cash) || 0;
+      liveReady = true;
+    }
+
+    function renderHoldings() {
+      const list = $('holdingsList');
+      list.innerHTML = '';
+      const h = account.holdings || {};
+      SYMS.forEach((sym) => {
+        const amount = Number(h[sym]) || 0;
+        const price = prices ? prices[sym] : null;
+        const valueText = price ? '$' + num(amount * price) : (amount > 0 ? '—' : '$0.00');
+        const row = document.createElement('div');
+        row.className = 'holding-row';
+        row.innerHTML = '<span>' + sym.toUpperCase() + ': ' + amount.toFixed(6) + '</span><span>' + valueText + '</span>';
+        list.appendChild(row);
+      });
+    }
+
+    function renderAccount() {
+      $('usernameDisplay').textContent = account.username || username || '';
+      $('cashValue').textContent = num(account.cash);
+      $('walletValue').textContent = num(account.wallet_balance);
+      $('bestScoreValue').textContent = num(account.best_score);
+      $('portfolioValue').textContent = liveReady ? num(liveValue) : '…';
+
+      const tier = account.verification_tier;
+      if (tier === 'gold') {
+        $('verifiedBadge').innerHTML = badgeSvg('#d4af37');
+        $('verifiedNote').textContent = '';
+      } else if (tier === 'blue') {
+        $('verifiedBadge').innerHTML = badgeSvg('#3b82f6');
+        $('verifiedNote').textContent = '';
+      } else {
+        $('verifiedBadge').innerHTML = '';
+        $('verifiedNote').textContent = 'Account not verified yet.';
+      }
+      renderHoldings();
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch(`${API}/api/data/${userId}`);
+        if (!res.ok) throw new Error('load failed');
+        account = await res.json();
+      } catch (e) {
+        if (!account) $('verifiedNote').textContent = 'Could not load your account. Please refresh in a moment.';
+        return;
+      }
+      await fetchPrices();
+      computeLive();
+      renderAccount();
+      renderPerf();
+    }
+
+    // ---------- performance history ----------
+    async function loadHistory() {
+      const seq = ++historySeq;
+      try {
+        const res = await fetch(`${API}/api/data/${userId}/history?range=${perfRange}`);
+        if (!res.ok) throw new Error('history failed');
+        const data = await res.json();
+        if (seq !== historySeq) return;
+        historyPoints = data.points || [];
+        historyError = false;
+      } catch (e) {
+        if (seq !== historySeq) return;
+        historyPoints = [];
+        historyError = true;
+      }
+      historyLoaded = true;
+      renderPerf();
+    }
+
+    function buildSeries() {
+      const pts = historyPoints.map((p) => ({ t: Number(p.t), value: Number(p.value), base: Number(p.base) || 0 }));
+      if (liveReady && (liveValue > 0 || liveBase > 0)) {
+        const lastT = pts.length ? pts[pts.length - 1].t : 0;
+        pts.push({ t: Math.max(Date.now(), lastT), value: liveValue, base: liveBase });
+      }
+      return pts;
+    }
+
+    function createPerfChart() {
+      if (typeof Chart === 'undefined') return;
+      Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+
+      const gridColor = cssVar('--border-soft', 'rgba(128,128,128,0.15)');
+      const tickColor = cssVar('--muted', '#8f9ab3');
+
+      perfChart = new Chart($('perfCanvas').getContext('2d'), {
+        type: 'line',
+        data: {
+          datasets: [{
+            data: [],
+            borderColor: perfColor,
+            borderWidth: 2,
+            tension: 0.25,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: 'origin',
+            backgroundColor: function (c) {
+              const area = c.chart.chartArea;
+              if (!area) return 'transparent';
+              if (perfMode === 'pl') return hexToRgba(perfColor, 0.12);
+              const g = c.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+              g.addColorStop(0, hexToRgba(perfColor, 0.3));
+              g.addColorStop(1, hexToRgba(perfColor, 0));
+              return g;
+            }
+          }]
+        },
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'nearest', axis: 'x', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              displayColors: false,
+              backgroundColor: '#0b1120',
+              borderColor: 'rgba(212,175,55,0.4)',
+              borderWidth: 1,
+              titleColor: '#8f9ab3',
+              bodyColor: '#ffffff',
+              padding: 10,
+              callbacks: {
+                title: function (items) { return items.length ? fmtFullTime(items[0].parsed.x) : ''; },
+                label: function (ctx) {
+                  const r = ctx.raw || {};
+                  const pl = r.v - r.b;
+                  if (perfMode === 'pl') {
+                    const pct = r.b > 0 ? ' (' + fmtPct((pl / r.b) * 100) + ')' : '';
+                    return ['Profit/Loss: ' + fmtSigned(pl) + pct, 'Value: ' + fmtMoney(r.v)];
+                  }
+                  return ['Value: ' + fmtMoney(r.v), 'Profit/Loss: ' + fmtSigned(pl)];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              grid: { color: gridColor },
+              ticks: {
+                color: tickColor,
+                maxRotation: 0,
+                callback: function (value) { return fmtAxisTime(value, this.max - this.min); }
+              },
+              afterBuildTicks: function (scale) {
+                const t = niceTimeTicks(scale.min, scale.max);
+                if (t.length >= 2) scale.ticks = t.map((value) => ({ value: value }));
+              }
+            },
+            y: {
+              grace: '8%',
+              grid: {
+                color: function (ctx) {
+                  return (perfMode === 'pl' && ctx.tick && ctx.tick.value === 0) ? 'rgba(128,128,128,0.55)' : gridColor;
+                }
+              },
+              ticks: { color: tickColor, callback: function (v) { return fmtTick(v); } }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart(series, show) {
+      if (!perfChart) return;
+      const isPL = perfMode === 'pl';
+      const data = show
+        ? series.map((p) => ({ x: p.t, y: isPL ? p.value - p.base : p.value, v: p.value, b: p.base }))
+        : [];
+
+      const lastY = data.length ? data[data.length - 1].y : 0;
+      perfColor = isPL ? (lastY >= 0 ? '#2ecc71' : '#ef4444') : '#d4af37';
+
+      const ds = perfChart.data.datasets[0];
+      ds.data = data;
+      ds.borderColor = perfColor;
+
+      if (data.length >= 2) {
+        const min = data[0].x;
+        let max = data[data.length - 1].x;
+        if (max <= min) max = min + 60000;
+        perfChart.options.scales.x.min = min;
+        perfChart.options.scales.x.max = max;
+      }
+      perfChart.update('none');
+    }
+
+    function renderPerf() {
+      // Header: profit / loss right now
+      const plEl = $('perfPL');
+      if (liveReady) {
+        const pl = liveValue - liveBase;
+        const pct = liveBase > 0 ? ' (' + fmtPct((pl / liveBase) * 100) + ')' : '';
+        plEl.textContent = fmtSigned(pl) + pct;
+        plEl.className = Math.abs(pl) < 0.005 ? '' : (pl > 0 ? 'pos' : 'neg');
+      } else {
+        plEl.textContent = '—';
+        plEl.className = '';
+      }
+
+      const series = buildSeries();
+      let message = '';
+      if (!perfChart) {
+        message = 'The chart could not load. Please refresh the page.';
+      } else if (!account || (!historyLoaded && !historyError)) {
+        message = 'Loading your performance…';
+      } else if (liveReady && liveValue <= 0 && liveBase <= 0 && historyPoints.length === 0) {
+        message = 'Your performance chart will appear once your account is funded.';
+      } else if (series.length < 2) {
+        message = historyError
+          ? 'Could not load your history right now. Please try again in a moment.'
+          : 'Not enough history for this range yet. Try "All", or check back in a few minutes.';
+      }
+
+      const emptyEl = $('perfEmpty');
+      if (message) {
+        emptyEl.textContent = message;
+        emptyEl.style.display = 'flex';
+      } else {
+        emptyEl.style.display = 'none';
+      }
+      updateChart(series, !message);
+    }
+
+    function setActive(segId, button) {
+      document.querySelectorAll('#' + segId + ' button').forEach((b) => b.classList.toggle('active', b === button));
+    }
+
+    function bindPerfControls() {
+      $('modeSeg').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        perfMode = b.dataset.mode;
+        setActive('modeSeg', b);
+        renderPerf();
+      });
+      $('rangeSeg').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        perfRange = b.dataset.range;
+        setActive('rangeSeg', b);
+        historyPoints = [];
+        historyLoaded = false;
+        historyError = false;
+        renderPerf();
+        loadHistory();
+      });
+    }
+
+    function init() {
+      if (!userId) return;
+
+      $('logoutLink').addEventListener('click', () => {
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        localStorage.removeItem('authToken');
+        window.location.href = 'login.html';
+      });
+
+      createPerfChart();
+      bindPerfControls();
+      renderPerf();
+      loadHistory();
+      refresh();
+
+      setInterval(() => { if (!document.hidden) refresh(); }, 60000);
+      setInterval(() => { if (!document.hidden) loadHistory(); }, 300000);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   </script>
 
 </body>
