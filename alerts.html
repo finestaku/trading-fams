@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watchlist &amp; Alerts - Crypto Global Trade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .al-wrap { max-width: 900px; margin: 40px auto; padding: 0 20px 70px; }
+    .al-wrap h2 { font-family: 'Playfair Display', serif; margin: 0 0 6px; }
+    .al-sub { color: var(--muted); font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+    .al-h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin: 0 0 14px; }
+    .up { color: #2ecc71; }
+    .down { color: #ef4444; }
+
+    .wl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 8px; }
+    .wl-card {
+      background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px;
+      padding: 18px; position: relative; transition: border-color 0.15s ease;
+    }
+    .wl-card.watched { border-color: rgba(212,175,55,0.6); box-shadow: 0 0 0 1px rgba(212,175,55,0.3); }
+    .wl-top { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; padding-right: 30px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .wl-sym { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.6px; }
+    .wl-price { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
+    .wl-chg { font-size: 12px; font-weight: 600; min-height: 16px; }
+    .wl-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .star-btn {
+      position: absolute; top: 10px; right: 12px; background: none; border: none;
+      font-size: 22px; line-height: 1; cursor: pointer; color: var(--muted); padding: 2px;
+    }
+    .star-btn.on { color: #d4af37; }
+    .mini {
+      padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1px solid var(--border-soft); background: transparent; color: var(--text);
+      text-decoration: none; font-family: inherit; display: inline-block;
+    }
+    .mini.gold { background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; border: none; }
+
+    .al-card {
+      background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px;
+      padding: 22px; margin: 22px 0 0;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; }
+    .form-grid label {
+      display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px;
+    }
+    .al-wrap select, .al-wrap input[type="number"] {
+      width: 100%; padding: 11px 12px; border-radius: 6px; border: 1px solid var(--border-soft);
+      background: var(--bg); color: var(--text); font-size: 14px; font-family: inherit; box-sizing: border-box;
+    }
+    .al-wrap select:focus, .al-wrap input[type="number"]:focus { outline: none; border-color: var(--accent); }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 16px; }
+    .seg { display: flex; background: rgba(128,128,128,0.12); border-radius: 8px; padding: 3px; }
+    .seg button {
+      flex: 1; border: none; background: transparent; color: var(--muted); font-weight: 700;
+      font-size: 12px; padding: 9px 8px; border-radius: 6px; cursor: pointer; font-family: inherit;
+    }
+    .seg button.active { background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; }
+    .quick { display: flex; gap: 6px; margin-top: 8px; }
+    .quick button {
+      flex: 1; padding: 7px 0; border-radius: 6px; border: 1px solid var(--border-soft);
+      background: transparent; color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .create-btn {
+      margin-top: 18px; padding: 12px 22px; border: none; border-radius: 6px;
+      background: linear-gradient(135deg, #d4af37, #a67c00); color: #0d1321; font-weight: 700;
+      font-size: 13px; letter-spacing: 0.4px; text-transform: uppercase; cursor: pointer; font-family: inherit;
+    }
+    .create-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .al-msg { font-size: 13px; margin: 12px 0 0; min-height: 18px; font-weight: 600; line-height: 1.5; }
+
+    .al-row {
+      display: flex; align-items: center; gap: 12px; padding: 13px 0;
+      border-bottom: 1px solid var(--border-soft); font-size: 14px;
+    }
+    .al-row:last-child { border-bottom: none; }
+    .al-row .mid { flex: 1; min-width: 0; line-height: 1.5; }
+    .al-row small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .del-btn {
+      padding: 7px 12px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.5);
+      background: transparent; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .done { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #2ecc71; white-space: nowrap; }
+    .empty { color: var(--muted); font-size: 13px; padding: 8px 0; line-height: 1.6; }
+    .al-note { font-size: 12px; color: var(--muted); line-height: 1.7; margin: 22px 0 0; }
+
+    @media (max-width: 720px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">Crypto Global Trade</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu"></div>
+  </nav>
+
+  <div class="al-wrap">
+    <h2>Watchlist &amp; Alerts</h2>
+    <p class="al-sub">Star the coins you follow and set price alerts. We'll notify you the moment a price is hit.</p>
+
+    <div class="wl-grid" id="wlGrid"></div>
+    <p class="al-msg" id="wlMsg"></p>
+
+    <div class="al-card" id="createCard">
+      <h3 class="al-h3">Create a price alert</h3>
+      <div class="form-grid">
+        <div>
+          <label for="alertCoin">Coin</label>
+          <select id="alertCoin"></select>
+          <div class="hint" id="priceHint">Loading price…</div>
+        </div>
+        <div>
+          <label>When the price</label>
+          <div class="seg" id="dirSeg">
+            <button type="button" data-dir="above" class="active">Rises above</button>
+            <button type="button" data-dir="below">Falls below</button>
+          </div>
+        </div>
+        <div>
+          <label for="alertTarget">Target price (USD)</label>
+          <input id="alertTarget" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g. 70000" autocomplete="off">
+          <div class="quick" id="quickBtns"></div>
+        </div>
+      </div>
+      <button class="create-btn" id="createBtn">Create Alert</button>
+      <p class="al-msg" id="alertMsg"></p>
+    </div>
+
+    <div class="al-card">
+      <h3 class="al-h3">Active alerts</h3>
+      <div id="activeList"><div class="empty">Loading…</div></div>
+    </div>
+
+    <div class="al-card">
+      <h3 class="al-h3">Triggered alerts</h3>
+      <div id="triggeredList"><div class="empty">Loading…</div></div>
+    </div>
+
+    <p class="al-note">
+      Each alert fires once. You'll get an email (if your account has one) and a pop-up on whichever page you have open. Prices are checked whenever our server is awake. Our free hosting sleeps when nobody is visiting, so an alert can arrive late, but it will still fire. Virtual trading platform, not financial advice.
+    </p>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    const API = 'https://crypto-global-trade-backend.onrender.com';
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'login.html';
+
+    const COINS = [
+      { sym: 'btc',  id: 'bitcoin',  name: 'Bitcoin',  color: '#f7931a' },
+      { sym: 'eth',  id: 'ethereum', name: 'Ethereum', color: '#627eea' },
+      { sym: 'sol',  id: 'solana',   name: 'Solana',   color: '#00ffa3' },
+      { sym: 'doge', id: 'dogecoin', name: 'Dogecoin', color: '#c2a633' }
+    ];
+    const coinBySym = (s) => COINS.find((c) => c.sym === s);
+
+    let prices = {};
+    let change24h = {};
+    let watched = [];
+    let activeAlerts = [];
+    let triggeredAlerts = [];
+    let alertsLoaded = false;
+    let direction = 'above';
+    let wlMsgTimer = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    function fmtPrice(p) {
+      const v = Number(p) || 0;
+      if (!v) return '—';
+      if (v >= 1) return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return '$' + v.toFixed(5);
+    }
+    function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+    function parseDb(s) {
+      const t = Date.parse(String(s || '').replace(' ', 'T') + 'Z');
+      return isNaN(t) ? null : t;
+    }
+    function fmtTime(ms) {
+      if (!ms) return '';
+      return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function setMsg(el, text, color) {
+      el.textContent = text;
+      el.style.color = color || 'var(--muted)';
+    }
+
+    // ---------- watchlist ----------
+    function renderWatchlist() {
+      const sorted = COINS.slice().sort((a, b) => {
+        const diff = (watched.includes(b.sym) ? 1 : 0) - (watched.includes(a.sym) ? 1 : 0);
+        return diff || (COINS.indexOf(a) - COINS.indexOf(b));
+      });
+
+      $('wlGrid').innerHTML = sorted.map((c) => {
+        const on = watched.includes(c.sym);
+        const ch = change24h[c.sym];
+        const chText = (ch === null || ch === undefined) ? '' : fmtPct(ch) + ' (24h)';
+        const chClass = (ch === null || ch === undefined) ? '' : (ch >= 0 ? 'up' : 'down');
+        return '<div class="wl-card' + (on ? ' watched' : '') + '">' +
+          '<button class="star-btn' + (on ? ' on' : '') + '" data-star="' + c.sym + '" title="' + (on ? 'Remove from watchlist' : 'Add to watchlist') + '">' + (on ? '★' : '☆') + '</button>' +
+          '<div class="wl-top"><span class="dot" style="background:' + c.color + '"></span>' + c.name + ' <span class="wl-sym">' + c.sym.toUpperCase() + '</span></div>' +
+          '<div class="wl-price">' + fmtPrice(prices[c.sym]) + '</div>' +
+          '<div class="wl-chg ' + chClass + '">' + chText + '</div>' +
+          '<div class="wl-actions">' +
+            '<button class="mini gold" data-alert="' + c.sym + '">Set alert</button>' +
+            '<a class="mini" href="trading.html">Trade</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function loadWatchlist() {
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/watchlist');
+        if (!res.ok) throw new Error('failed');
+        const data = await res.json();
+        watched = Array.isArray(data.coins) ? data.coins : [];
+        renderWatchlist();
+      } catch (e) {}
+    }
+
+    async function toggleStar(sym) {
+      const wasOn = watched.includes(sym);
+      watched = wasOn ? watched.filter((s) => s !== sym) : watched.concat(sym);
+      renderWatchlist();
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/watchlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coin: sym, on: !wasOn })
+        });
+        if (!res.ok) throw new Error('failed');
+        const data = await res.json();
+        if (Array.isArray(data.coins)) { watched = data.coins; renderWatchlist(); }
+      } catch (e) {
+        watched = wasOn ? watched.concat(sym) : watched.filter((s) => s !== sym);
+        renderWatchlist();
+        setMsg($('wlMsg'), 'Could not update your watchlist. Please try again.', '#ef4444');
+        clearTimeout(wlMsgTimer);
+        wlMsgTimer = setTimeout(() => setMsg($('wlMsg'), ''), 4000);
+      }
+    }
+
+    // ---------- prices ----------
+    async function fetchPrices() {
+      try {
+        const res = await fetch(API + '/api/prices');
+        if (!res.ok) throw new Error('bad status');
+        const d = await res.json();
+        if (!d || !d.bitcoin) throw new Error('bad data');
+        COINS.forEach((c) => {
+          const x = d[c.id];
+          if (!x || !x.usd) return;
+          prices[c.sym] = x.usd;
+          change24h[c.sym] = typeof x.usd_24h_change === 'number' ? x.usd_24h_change : null;
+        });
+        renderWatchlist();
+        updatePriceHint();
+        renderActive();
+      } catch (e) {}
+    }
+
+    function updatePriceHint() {
+      const sym = $('alertCoin').value;
+      $('priceHint').textContent = prices[sym] > 0 ? 'Current price: ' + fmtPrice(prices[sym]) : 'Loading price…';
+    }
+
+    // ---------- alert form ----------
+    function renderQuick() {
+      const sign = direction === 'above' ? '+' : '-';
+      $('quickBtns').innerHTML = [2, 5, 10].map((p) => '<button type="button" data-pct="' + p + '">' + sign + p + '%</button>').join('');
+    }
+
+    function applyQuick(pct) {
+      const sym = $('alertCoin').value;
+      const price = prices[sym];
+      if (!(price > 0)) { setMsg($('alertMsg'), 'Prices are still loading. Try again in a moment.', '#ef4444'); return; }
+      const factor = 1 + (direction === 'above' ? 1 : -1) * (pct / 100);
+      const target = price * factor;
+      $('alertTarget').value = price >= 1 ? target.toFixed(2) : target.toFixed(5);
+      setMsg($('alertMsg'), '');
+    }
+
+    async function createAlert() {
+      const msg = $('alertMsg');
+      const btn = $('createBtn');
+      const coin = $('alertCoin').value;
+      const target = parseFloat($('alertTarget').value);
+
+      if (!(target > 0)) { setMsg(msg, 'Enter a target price.', '#ef4444'); return; }
+
+      btn.disabled = true;
+      setMsg(msg, 'Creating alert… (the first request can take up to a minute)');
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coin: coin, direction: direction, target: target })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          $('alertTarget').value = '';
+          setMsg(msg, 'Alert created. We\'ll notify you when it hits.', '#2ecc71');
+          await loadAlerts();
+        } else {
+          setMsg(msg, data.error || 'Could not create the alert. Please try again.', '#ef4444');
+        }
+      } catch (e) {
+        setMsg(msg, 'Could not reach the server. Please try again.', '#ef4444');
+      }
+      btn.disabled = false;
+    }
+
+    // ---------- alert lists ----------
+    function renderActive() {
+      if (!alertsLoaded) return;
+      const el = $('activeList');
+      if (!activeAlerts.length) {
+        el.innerHTML = '<div class="empty">No active alerts yet. Create one above and we\'ll tell you the moment it hits.</div>';
+        return;
+      }
+      el.innerHTML = activeAlerts.map((a) => {
+        const c = coinBySym(a.coin);
+        if (!c) return '';
+        const price = prices[a.coin];
+        let away = '';
+        if (price > 0) away = fmtPct((a.target / price - 1) * 100) + ' from current price';
+        const verb = a.direction === 'above' ? 'rises above' : 'falls below';
+        const created = fmtTime(parseDb(a.created_at));
+        return '<div class="al-row">' +
+          '<span class="dot" style="background:' + c.color + '"></span>' +
+          '<div class="mid"><b>' + c.name + '</b> ' + verb + ' <b>' + fmtPrice(a.target) + '</b>' +
+            '<small>' + (away ? away + ' · ' : '') + 'Created ' + created + '</small></div>' +
+          '<button class="del-btn" data-del="' + Number(a.id) + '">Delete</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderTriggered() {
+      if (!alertsLoaded) return;
+      const el = $('triggeredList');
+      if (!triggeredAlerts.length) {
+        el.innerHTML = '<div class="empty">Nothing has triggered yet.</div>';
+        return;
+      }
+      el.innerHTML = triggeredAlerts.map((a) => {
+        const c = coinBySym(a.coin);
+        if (!c) return '';
+        const verb = a.direction === 'above' ? 'rose above' : 'fell below';
+        return '<div class="al-row">' +
+          '<span class="dot" style="background:' + c.color + '"></span>' +
+          '<div class="mid"><b>' + c.name + '</b> ' + verb + ' <b>' + fmtPrice(a.target) + '</b>' +
+            '<small>Hit at ' + fmtPrice(a.triggered_price) + ' · ' + fmtTime(parseDb(a.triggered_at)) + '</small></div>' +
+          '<span class="done">Triggered</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function loadAlerts() {
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/alerts');
+        if (!res.ok) throw new Error('failed');
+        const data = await res.json();
+        activeAlerts = data.active || [];
+        triggeredAlerts = data.triggered || [];
+        alertsLoaded = true;
+        renderActive();
+        renderTriggered();
+      } catch (e) {
+        if (!alertsLoaded) {
+          $('activeList').innerHTML = '<div class="empty">Could not load your alerts yet. Retrying…</div>';
+          $('triggeredList').innerHTML = '<div class="empty">Could not load your alerts yet. Retrying…</div>';
+        }
+      }
+    }
+
+    async function deleteAlert(id) {
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/alerts/' + id + '/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        });
+        if (!res.ok) throw new Error('failed');
+        activeAlerts = activeAlerts.filter((a) => Number(a.id) !== id);
+        renderActive();
+      } catch (e) {
+        setMsg($('alertMsg'), 'Could not delete that alert. Please try again.', '#ef4444');
+      }
+    }
+
+    // ---------- setup ----------
+    function bindEvents() {
+      $('wlGrid').addEventListener('click', (e) => {
+        const star = e.target.closest('[data-star]');
+        if (star) { toggleStar(star.dataset.star); return; }
+        const setAlert = e.target.closest('[data-alert]');
+        if (setAlert) {
+          $('alertCoin').value = setAlert.dataset.alert;
+          updatePriceHint();
+          $('alertTarget').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          $('alertTarget').focus({ preventScroll: true });
+        }
+      });
+
+      $('alertCoin').addEventListener('change', updatePriceHint);
+
+      $('dirSeg').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        direction = b.dataset.dir;
+        document.querySelectorAll('#dirSeg button').forEach((x) => x.classList.toggle('active', x === b));
+        renderQuick();
+        setMsg($('alertMsg'), '');
+      });
+
+      $('quickBtns').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) applyQuick(Number(b.dataset.pct));
+      });
+
+      $('createBtn').addEventListener('click', createAlert);
+      $('alertTarget').addEventListener('keydown', (e) => { if (e.key === 'Enter') createAlert(); });
+
+      $('activeList').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-del]');
+        if (b) deleteAlert(Number(b.dataset.del));
+      });
+    }
+
+    function init() {
+      $('alertCoin').innerHTML = COINS.map((c) => '<option value="' + c.sym + '">' + c.name + ' (' + c.sym.toUpperCase() + ')</option>').join('');
+      renderQuick();
+      renderWatchlist();
+      bindEvents();
+
+      fetchPrices();
+      loadWatchlist();
+      loadAlerts();
+
+      setInterval(fetchPrices, 10000);
+      setInterval(() => { if (!document.hidden) loadAlerts(); }, 30000);
+    }
+
+    if (userId) init();
+  </script>
+
+</body>
+</html>

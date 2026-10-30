@@ -61,6 +61,7 @@ function initNav() {
   }
 
   renderNavMenu(navMenu, username, userId);
+  startAlertWatcher();
 }
 
 async function renderNavMenu(navMenu, username, userId) {
@@ -81,6 +82,7 @@ async function renderNavMenu(navMenu, username, userId) {
     <a href="trading.html" data-i18n="nav_trading">Trading</a>
     <a href="wallet.html">Wallet</a>
     <a href="traders.html">Traders</a>
+    <a href="alerts.html">Watchlist &amp; Alerts</a>
     <a href="leaderboard.html" data-i18n="nav_leaderboard">Leaderboard</a>
     <a href="about.html" data-i18n="nav_about">About</a>
     <a href="support.html">Support</a>
@@ -104,6 +106,77 @@ async function renderNavMenu(navMenu, username, userId) {
   if (typeof applyTranslations === 'function' && localStorage.getItem('siteLang')) {
     applyTranslations(localStorage.getItem('siteLang'));
   }
+}
+
+// ---- Price alert pop-ups (shown on every page when one of your alerts has fired) ----
+function navFmtPrice(n) {
+  const v = Number(n) || 0;
+  if (v >= 1) return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return '$' + v.toFixed(5);
+}
+
+function injectAlertToastStyles() {
+  if (document.getElementById('alertToastStyles')) return;
+  const style = document.createElement('style');
+  style.id = 'alertToastStyles';
+  style.textContent = `
+    #alertToastWrap { position: fixed; top: 14px; right: 14px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; max-width: min(360px, calc(100vw - 28px)); }
+    .alert-toast { background: #0f1626; color: #eae6d9; border: 1px solid #d4af37; border-radius: 12px; padding: 14px 40px 14px 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.5; position: relative; }
+    .alert-toast b { color: #d4af37; }
+    .alert-toast a { color: #d4af37; font-weight: 700; text-decoration: underline; }
+    .alert-toast .x { position: absolute; top: 8px; right: 10px; background: none; border: none; color: #8f9ab3; font-size: 20px; cursor: pointer; line-height: 1; padding: 0; }
+  `;
+  document.head.appendChild(style);
+}
+
+function showAlertToast(a) {
+  injectAlertToastStyles();
+  let wrap = document.getElementById('alertToastWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'alertToastWrap';
+    document.body.appendChild(wrap);
+  }
+
+  const sym = String(a.coin || '').toUpperCase();
+  const verb = a.direction === 'above' ? 'rose above' : 'fell below';
+
+  const toast = document.createElement('div');
+  toast.className = 'alert-toast';
+  toast.innerHTML = `<b>🔔 Price alert</b><br>${sym} ${verb} ${navFmtPrice(a.target)} (now ${navFmtPrice(a.triggered_price)}). <a href="alerts.html">View alerts</a><button class="x" aria-label="Dismiss">×</button>`;
+  toast.querySelector('.x').addEventListener('click', () => toast.remove());
+  wrap.appendChild(toast);
+  setTimeout(() => toast.remove(), 25000);
+}
+
+async function checkAlertNotifications() {
+  const userId = localStorage.getItem('userId');
+  if (!userId || !localStorage.getItem('authToken') || document.hidden) return;
+
+  try {
+    const res = await fetch(`${NAV_API}/api/data/${userId}/alerts/unseen`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.alerts || !data.alerts.length) return;
+
+    data.alerts.forEach(showAlertToast);
+    await fetch(`${NAV_API}/api/data/${userId}/alerts/seen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: data.alerts.map(a => a.id) })
+    });
+  } catch (err) {}
+}
+
+let alertWatcherStarted = false;
+function startAlertWatcher() {
+  if (alertWatcherStarted) return;
+  alertWatcherStarted = true;
+  checkAlertNotifications();
+  setInterval(checkAlertNotifications, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) checkAlertNotifications();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initNav);
