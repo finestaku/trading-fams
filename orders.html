@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limit Orders - Crypto Global Trade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .lo-wrap { max-width: 900px; margin: 40px auto; padding: 0 20px 70px; }
+    .lo-wrap h2 { font-family: 'Playfair Display', serif; margin: 0 0 6px; }
+    .lo-sub { color: var(--muted); font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+    .lo-h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin: 0 0 14px; }
+    .up { color: #2ecc71; }
+    .down { color: #ef4444; }
+
+    .balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 8px; }
+    .bal { background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px; padding: 14px 16px; }
+    .bal .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+    .bal .val { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .bal .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .lo-card { background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 10px; padding: 22px; margin: 22px 0 0; }
+
+    .seg { display: flex; background: rgba(128,128,128,0.12); border-radius: 8px; padding: 3px; }
+    .seg button {
+      flex: 1; border: none; background: transparent; color: var(--muted); font-weight: 700;
+      font-size: 13px; padding: 10px 8px; border-radius: 6px; cursor: pointer; font-family: inherit;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .seg button.active.buy { background: #2ecc71; color: #06210f; }
+    .seg button.active.sell { background: #ef4444; color: #fff; }
+    .side-seg { max-width: 320px; margin-bottom: 18px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; }
+    .form-grid label.l {
+      display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px;
+    }
+    .lo-wrap select, .lo-wrap input[type="number"] {
+      width: 100%; padding: 11px 12px; border-radius: 6px; border: 1px solid var(--border-soft);
+      background: var(--bg); color: var(--text); font-size: 14px; font-family: inherit; box-sizing: border-box;
+    }
+    .lo-wrap select:focus, .lo-wrap input[type="number"]:focus { outline: none; border-color: var(--accent); }
+    .lo-wrap input:disabled { opacity: 0.45; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 16px; }
+    .quick { display: flex; gap: 6px; margin-top: 8px; }
+    .quick button {
+      flex: 1; padding: 7px 0; border-radius: 6px; border: 1px solid var(--border-soft);
+      background: transparent; color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 10px; cursor: pointer; color: var(--text); }
+    .chk input { width: auto; margin: 0; }
+
+    .estimate { background: rgba(128,128,128,0.08); border-radius: 8px; padding: 14px 16px; margin-top: 18px; font-size: 13px; }
+    .estimate .row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; color: var(--muted); }
+    .estimate .row b { color: var(--text); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+    .estimate .warn { color: #ef4444; font-size: 12px; margin-top: 8px; line-height: 1.5; }
+
+    .create-btn {
+      margin-top: 18px; padding: 12px 22px; border: none; border-radius: 6px; font-weight: 700;
+      font-size: 13px; letter-spacing: 0.4px; text-transform: uppercase; cursor: pointer; font-family: inherit;
+    }
+    .create-btn.buy { background: linear-gradient(135deg, #2ecc71, #1a9c55); color: #04210f; }
+    .create-btn.sell { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+    .create-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .lo-msg { font-size: 13px; margin: 12px 0 0; min-height: 18px; font-weight: 600; line-height: 1.5; }
+
+    .o-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border-soft); font-size: 14px; }
+    .o-row:last-child { border-bottom: none; }
+    .o-row .mid { flex: 1; min-width: 0; line-height: 1.5; }
+    .o-row small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .tag { font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+    .tag.buy { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .tag.sell { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .tag.filled { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .tag.cancelled { background: rgba(128,128,128,0.2); color: var(--muted); }
+    .cancel-btn {
+      padding: 7px 12px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.5);
+      background: transparent; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .empty { color: var(--muted); font-size: 13px; padding: 8px 0; line-height: 1.6; }
+    .lo-note { font-size: 12px; color: var(--muted); line-height: 1.7; margin: 22px 0 0; }
+
+    @media (max-width: 720px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .o-row { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">Crypto Global Trade</div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="nav-menu" id="navMenu"></div>
+  </nav>
+
+  <div class="lo-wrap">
+    <h2>Limit Orders</h2>
+    <p class="lo-sub">Choose the price you want and we'll trade for you automatically when the market reaches it. Orders stay open until they fill or you cancel them.</p>
+
+    <div class="balances" id="balances"></div>
+
+    <div class="lo-card">
+      <h3 class="lo-h3">Place a limit order</h3>
+
+      <div class="seg side-seg" id="sideSeg">
+        <button type="button" data-side="buy" class="buy active">Buy</button>
+        <button type="button" data-side="sell" class="sell">Sell</button>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label class="l" for="coinSel">Coin</label>
+          <select id="coinSel"></select>
+          <div class="hint" id="priceHint">Loading price…</div>
+        </div>
+        <div>
+          <label class="l" for="limitInput" id="limitLabel">Buy when price falls to (USD)</label>
+          <input id="limitInput" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g. 60000" autocomplete="off">
+          <div class="quick" id="quickBtns"></div>
+        </div>
+        <div>
+          <label class="l" for="amountInput" id="amountLabel">Amount to spend (USD)</label>
+          <input id="amountInput" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g. 500" autocomplete="off">
+          <label class="chk" id="sellAllRow" style="display:none;"><input type="checkbox" id="sellAllChk"> Sell my entire position</label>
+        </div>
+      </div>
+
+      <div class="estimate" id="estimate"></div>
+
+      <button class="create-btn buy" id="createBtn">Place Buy Order</button>
+      <p class="lo-msg" id="orderMsg"></p>
+    </div>
+
+    <div class="lo-card">
+      <h3 class="lo-h3">Open orders</h3>
+      <div id="openList"><div class="empty">Loading…</div></div>
+    </div>
+
+    <div class="lo-card">
+      <h3 class="lo-h3">Order history</h3>
+      <div id="historyList"><div class="empty">Loading…</div></div>
+    </div>
+
+    <p class="lo-note">
+      Orders fill at the market price when the price is checked, which is at your limit price or better. We check whenever our server is awake. Our free hosting sleeps when nobody is visiting, so an order can fill late, and a very brief price move between checks can be missed. Your cash and coins are checked when you place an order and again when it fills. If you've spent them elsewhere by then, the order is cancelled and we'll tell you why. A 0.5% fee applies to every fill. Virtual trading platform, not financial advice.
+    </p>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    const API = 'https://crypto-global-trade-backend.onrender.com';
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'login.html';
+
+    const FEE_RATE = 0.005;
+    const COINS = [
+      { sym: 'btc',  id: 'bitcoin',  name: 'Bitcoin',  color: '#f7931a' },
+      { sym: 'eth',  id: 'ethereum', name: 'Ethereum', color: '#627eea' },
+      { sym: 'sol',  id: 'solana',   name: 'Solana',   color: '#00ffa3' },
+      { sym: 'doge', id: 'dogecoin', name: 'Dogecoin', color: '#c2a633' }
+    ];
+    const coinBySym = (s) => COINS.find((c) => c.sym === s);
+
+    let prices = {};
+    let account = null;
+    let openOrders = [];
+    let historyOrders = [];
+    let ordersLoaded = false;
+    let side = 'buy';
+    let busy = false;
+
+    const $ = (id) => document.getElementById(id);
+
+    // ---------- helpers ----------
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+    function fmtPrice(p) {
+      const v = Number(p) || 0;
+      if (!v) return '—';
+      if (v >= 1) return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return '$' + v.toFixed(5);
+    }
+    function fmtUSD(n) {
+      const v = Number(n) || 0;
+      return (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function fmtQty(q) {
+      const v = Number(q) || 0;
+      if (v >= 1000) return v.toFixed(2);
+      if (v >= 1) return v.toFixed(4);
+      return v.toFixed(6);
+    }
+    function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+    function parseDb(s) {
+      const t = Date.parse(String(s || '').replace(' ', 'T') + 'Z');
+      return isNaN(t) ? null : t;
+    }
+    function fmtTime(ms) {
+      if (!ms) return '';
+      return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    function setMsg(text, color) {
+      const el = $('orderMsg');
+      el.textContent = text;
+      el.style.color = color || 'var(--muted)';
+    }
+    function row(label, value) { return '<div class="row"><span>' + label + '</span><b>' + value + '</b></div>'; }
+
+    // Cash and coins that your open orders are counting on (same rule the server uses)
+    function reserved() {
+      const r = { cash: 0, coins: { btc: 0, eth: 0, sol: 0, doge: 0 } };
+      openOrders.forEach((o) => {
+        if (o.side === 'buy') {
+          r.cash += o.amount_usd * (1 + FEE_RATE);
+        } else {
+          r.coins[o.coin] += o.sell_all ? ((account && Number(account.holdings[o.coin])) || 0) : o.amount_usd / o.limit_price;
+        }
+      });
+      return r;
+    }
+
+    // ---------- balances ----------
+    function renderBalances() {
+      const el = $('balances');
+      if (!account) {
+        el.innerHTML = '<div class="bal"><div class="lbl">Loading your balances…</div></div>';
+        return;
+      }
+      const r = reserved();
+      const availCash = Math.max(0, account.cash - r.cash);
+      let html = '<div class="bal"><div class="lbl">Cash available for orders</div><div class="val">' + fmtUSD(availCash) +
+        '</div><div class="sub">of ' + fmtUSD(account.cash) + ' trading cash</div></div>';
+
+      COINS.forEach((c) => {
+        const have = Number(account.holdings[c.sym]) || 0;
+        if (have <= 0) return;
+        const avail = Math.max(0, have - r.coins[c.sym]);
+        html += '<div class="bal"><div class="lbl">' + c.sym.toUpperCase() + ' available</div><div class="val">' + fmtQty(avail) +
+          '</div><div class="sub">of ' + fmtQty(have) + ' held</div></div>';
+      });
+      el.innerHTML = html;
+    }
+
+    // ---------- form ----------
+    function currentCoin() { return $('coinSel').value; }
+    function sellAllOn() { return side === 'sell' && $('sellAllChk').checked; }
+
+    function updatePriceHint() {
+      const p = prices[currentCoin()];
+      $('priceHint').textContent = p > 0 ? 'Current price: ' + fmtPrice(p) : 'Loading price…';
+    }
+
+    function renderQuick() {
+      const sign = side === 'buy' ? '-' : '+';
+      $('quickBtns').innerHTML = [2, 5, 10].map((p) => '<button type="button" data-pct="' + p + '">' + sign + p + '%</button>').join('');
+    }
+
+    function applyQuick(pct) {
+      const p = prices[currentCoin()];
+      if (!(p > 0)) { setMsg('Prices are still loading. Try again in a moment.', '#ef4444'); return; }
+      const target = p * (1 + (side === 'buy' ? -1 : 1) * (pct / 100));
+      $('limitInput').value = p >= 1 ? target.toFixed(2) : target.toFixed(5);
+      setMsg('');
+      updateEstimate();
+    }
+
+    function setSide(s) {
+      side = s;
+      document.querySelectorAll('#sideSeg button').forEach((b) => b.classList.toggle('active', b.dataset.side === s));
+      $('limitLabel').textContent = s === 'buy' ? 'Buy when price falls to (USD)' : 'Sell when price rises to (USD)';
+      $('amountLabel').textContent = s === 'buy' ? 'Amount to spend (USD)' : 'Amount to sell (USD)';
+      $('sellAllRow').style.display = s === 'sell' ? 'flex' : 'none';
+      if (s === 'buy') { $('sellAllChk').checked = false; $('amountInput').disabled = false; }
+      const btn = $('createBtn');
+      btn.className = 'create-btn ' + s;
+      btn.textContent = s === 'buy' ? 'Place Buy Order' : 'Place Sell Order';
+      renderQuick();
+      setMsg('');
+      updateEstimate();
+    }
+
+    function updateEstimate() {
+      const sym = currentCoin();
+      const c = coinBySym(sym);
+      const SYM = sym.toUpperCase();
+      const limit = parseFloat($('limitInput').value);
+      const amt = parseFloat($('amountInput').value);
+      const sellAll = sellAllOn();
+      const now = prices[sym];
+      const box = $('estimate');
+
+      $('amountInput').disabled = sellAll;
+
+      if (!(limit > 0)) {
+        box.innerHTML = '<div class="row"><span>Enter a limit price to see your order summary</span></div>';
+        return;
+      }
+
+      let html = '';
+      let warn = '';
+
+      if (side === 'buy') {
+        if (!(amt > 0)) {
+          box.innerHTML = '<div class="row"><span>Enter an amount to see your order summary</span></div>';
+          return;
+        }
+        const fee = amt * FEE_RATE;
+        html = row('Order', 'Buy ' + c.name + ' at ' + fmtPrice(limit) + ' or lower') +
+               row('You spend', fmtUSD(amt)) +
+               row('Fee (0.5%)', fmtUSD(fee)) +
+               row('Total cost', fmtUSD(amt + fee)) +
+               row('You receive', 'at least ' + fmtQty(amt / limit) + ' ' + SYM);
+        if (now > 0 && now <= limit) {
+          warn = c.name + ' is already at ' + fmtPrice(now) + ', which is at or below your price. Pick a lower price, or buy now from the Trading page.';
+        }
+      } else {
+        const have = account ? (Number(account.holdings[sym]) || 0) : 0;
+        if (sellAll) {
+          const gross = have * limit;
+          const fee = gross * FEE_RATE;
+          html = row('Order', 'Sell your entire ' + c.name + ' position at ' + fmtPrice(limit) + ' or higher') +
+                 row('You sell', fmtQty(have) + ' ' + SYM) +
+                 row('You receive', 'at least ' + fmtUSD(gross - fee) + ' after the 0.5% fee');
+        } else {
+          if (!(amt > 0)) {
+            box.innerHTML = '<div class="row"><span>Enter an amount to see your order summary</span></div>';
+            return;
+          }
+          const fee = amt * FEE_RATE;
+          html = row('Order', 'Sell ' + c.name + ' at ' + fmtPrice(limit) + ' or higher') +
+                 row('You sell', 'up to ' + fmtQty(amt / limit) + ' ' + SYM) +
+                 row('Fee (0.5%)', fmtUSD(fee)) +
+                 row('You receive', fmtUSD(amt - fee));
+        }
+        if (now > 0 && now >= limit) {
+          warn = c.name + ' is already at ' + fmtPrice(now) + ', which is at or above your price. Pick a higher price, or sell now from the Trading page.';
+        }
+      }
+
+      if (warn) html += '<div class="warn">' + esc(warn) + '</div>';
+      box.innerHTML = html;
+    }
+
+    async function createOrder() {
+      if (busy) return;
+      const sym = currentCoin();
+      const limit = parseFloat($('limitInput').value);
+      const amt = parseFloat($('amountInput').value);
+      const sellAll = sellAllOn();
+
+      if (!(limit > 0)) { setMsg('Enter a limit price.', '#ef4444'); return; }
+      if (!sellAll && !(amt >= 1)) { setMsg('Enter an amount of at least $1.', '#ef4444'); return; }
+
+      busy = true;
+      $('createBtn').disabled = true;
+      setMsg('Placing order… (the first request can take up to a minute)');
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coin: sym, side: side, limitPrice: limit, amountUsd: sellAll ? 0 : amt, sellAll: sellAll })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          $('limitInput').value = '';
+          $('amountInput').value = '';
+          $('sellAllChk').checked = false;
+          setMsg('Order placed. We\'ll trade for you automatically when the price is reached.', '#2ecc71');
+          await Promise.all([loadOrders(), loadAccount()]);
+        } else {
+          setMsg(data.error || 'Could not place the order. Please try again.', '#ef4444');
+        }
+      } catch (e) {
+        setMsg('Could not reach the server. Please try again.', '#ef4444');
+      }
+      busy = false;
+      $('createBtn').disabled = false;
+      updateEstimate();
+    }
+
+    // ---------- lists ----------
+    function renderOpen() {
+      if (!ordersLoaded) return;
+      const el = $('openList');
+      if (!openOrders.length) {
+        el.innerHTML = '<div class="empty">No open orders. Place one above and we\'ll trade for you when the price is reached.</div>';
+        return;
+      }
+      el.innerHTML = openOrders.map((o) => {
+        const c = coinBySym(o.coin);
+        if (!c) return '';
+        const now = prices[o.coin];
+        const away = now > 0 ? fmtPct((o.limit_price / now - 1) * 100) + ' vs current price' : '';
+        let what;
+        if (o.side === 'buy') {
+          what = 'Buy <b>' + fmtUSD(o.amount_usd) + '</b> of ' + c.name + ' when the price falls to <b>' + fmtPrice(o.limit_price) + '</b> or lower';
+        } else if (o.sell_all) {
+          what = 'Sell your <b>entire ' + c.name + ' position</b> when the price rises to <b>' + fmtPrice(o.limit_price) + '</b> or higher';
+        } else {
+          what = 'Sell <b>' + fmtUSD(o.amount_usd) + '</b> of ' + c.name + ' when the price rises to <b>' + fmtPrice(o.limit_price) + '</b> or higher';
+        }
+        return '<div class="o-row">' +
+          '<span class="tag ' + (o.side === 'buy' ? 'buy' : 'sell') + '">' + (o.side === 'buy' ? 'Buy' : 'Sell') + '</span>' +
+          '<div class="mid">' + what + '<small>' + (away ? away + ' · ' : '') + 'Placed ' + fmtTime(parseDb(o.created_at)) + '</small></div>' +
+          '<button class="cancel-btn" data-cancel="' + Number(o.id) + '">Cancel</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderHistory() {
+      if (!ordersLoaded) return;
+      const el = $('historyList');
+      if (!historyOrders.length) {
+        el.innerHTML = '<div class="empty">Nothing here yet. Filled and cancelled orders will appear here.</div>';
+        return;
+      }
+      el.innerHTML = historyOrders.map((o) => {
+        const c = coinBySym(o.coin);
+        if (!c) return '';
+        const sym = o.coin.toUpperCase();
+        const when = fmtTime(parseDb(o.closed_at));
+        let detail;
+        if (o.status === 'filled') {
+          const verb = o.side === 'buy' ? 'Bought' : 'Sold';
+          detail = '<b>' + verb + ' ' + fmtQty(o.fill_qty) + ' ' + sym + '</b> at ' + fmtPrice(o.fill_price) +
+            '<small>Total ' + fmtUSD(o.fill_amount) + ' · your limit was ' + fmtPrice(o.limit_price) + ' · ' + when + '</small>';
+        } else {
+          detail = (o.side === 'buy' ? 'Buy' : 'Sell') + ' ' + c.name + ' at ' + fmtPrice(o.limit_price) +
+            '<small>' + esc(o.note || 'Cancelled') + ' · ' + when + '</small>';
+        }
+        return '<div class="o-row">' +
+          '<span class="tag ' + (o.status === 'filled' ? 'filled' : 'cancelled') + '">' + (o.status === 'filled' ? 'Filled' : 'Cancelled') + '</span>' +
+          '<div class="mid">' + detail + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function loadOrders() {
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/orders');
+        if (!res.ok) throw new Error('failed');
+        const data = await res.json();
+        openOrders = data.open || [];
+        historyOrders = data.history || [];
+        ordersLoaded = true;
+        renderOpen();
+        renderHistory();
+        renderBalances();
+      } catch (e) {
+        if (!ordersLoaded) {
+          $('openList').innerHTML = '<div class="empty">Could not load your orders yet. Retrying…</div>';
+          $('historyList').innerHTML = '<div class="empty">Could not load your orders yet. Retrying…</div>';
+        }
+      }
+    }
+
+    async function loadAccount() {
+      try {
+        const res = await fetch(API + '/api/data/' + userId);
+        if (!res.ok) throw new Error('failed');
+        account = await res.json();
+        renderBalances();
+        updateEstimate();
+      } catch (e) {}
+    }
+
+    async function cancelOrder(id) {
+      try {
+        const res = await fetch(API + '/api/data/' + userId + '/orders/' + id + '/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) setMsg(data.error || 'Could not cancel that order.', '#ef4444');
+        else setMsg('Order cancelled.', '#2ecc71');
+      } catch (e) {
+        setMsg('Could not reach the server. Please try again.', '#ef4444');
+      }
+      await Promise.all([loadOrders(), loadAccount()]);
+    }
+
+    async function fetchPrices() {
+      try {
+        const res = await fetch(API + '/api/prices');
+        if (!res.ok) throw new Error('bad status');
+        const d = await res.json();
+        if (!d || !d.bitcoin) throw new Error('bad data');
+        COINS.forEach((c) => {
+          const x = d[c.id];
+          if (x && x.usd) prices[c.sym] = x.usd;
+        });
+        updatePriceHint();
+        updateEstimate();
+        renderOpen();
+      } catch (e) {}
+    }
+
+    // ---------- setup ----------
+    function bindEvents() {
+      $('sideSeg').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) setSide(b.dataset.side);
+      });
+      $('coinSel').addEventListener('change', () => { updatePriceHint(); updateEstimate(); });
+      $('limitInput').addEventListener('input', updateEstimate);
+      $('amountInput').addEventListener('input', updateEstimate);
+      $('sellAllChk').addEventListener('change', updateEstimate);
+      $('quickBtns').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) applyQuick(Number(b.dataset.pct));
+      });
+      $('createBtn').addEventListener('click', createOrder);
+      $('openList').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-cancel]');
+        if (b) cancelOrder(Number(b.dataset.cancel));
+      });
+    }
+
+    function init() {
+      $('coinSel').innerHTML = COINS.map((c) => '<option value="' + c.sym + '">' + c.name + ' (' + c.sym.toUpperCase() + ')</option>').join('');
+      renderQuick();
+      renderBalances();
+      updateEstimate();
+      bindEvents();
+
+      fetchPrices();
+      loadAccount();
+      loadOrders();
+
+      setInterval(fetchPrices, 10000);
+      setInterval(() => { if (!document.hidden) { loadOrders(); loadAccount(); } }, 30000);
+    }
+
+    if (userId) init();
+  </script>
+
+</body>
+</html>

@@ -61,7 +61,7 @@ function initNav() {
   }
 
   renderNavMenu(navMenu, username, userId);
-  startAlertWatcher();
+  startNotificationWatcher();
 }
 
 async function renderNavMenu(navMenu, username, userId) {
@@ -80,6 +80,7 @@ async function renderNavMenu(navMenu, username, userId) {
     <a href="index.html" data-i18n="nav_home">Home</a>
     <a href="dashboard.html">Dashboard</a>
     <a href="trading.html" data-i18n="nav_trading">Trading</a>
+    <a href="orders.html">Limit Orders</a>
     <a href="wallet.html">Wallet</a>
     <a href="traders.html">Traders</a>
     <a href="alerts.html">Watchlist &amp; Alerts</a>
@@ -108,14 +109,30 @@ async function renderNavMenu(navMenu, username, userId) {
   }
 }
 
-// ---- Price alert pop-ups (shown on every page when one of your alerts has fired) ----
+// ---- Pop-ups shown on every page (price alerts and limit orders) ----
+function escHtmlNav(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function navFmtPrice(n) {
   const v = Number(n) || 0;
   if (v >= 1) return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return '$' + v.toFixed(5);
 }
 
-function injectAlertToastStyles() {
+function navFmtQty(q) {
+  const v = Number(q) || 0;
+  if (v >= 1000) return v.toFixed(2);
+  if (v >= 1) return v.toFixed(4);
+  return v.toFixed(6);
+}
+
+function injectToastStyles() {
   if (document.getElementById('alertToastStyles')) return;
   const style = document.createElement('style');
   style.id = 'alertToastStyles';
@@ -129,53 +146,72 @@ function injectAlertToastStyles() {
   document.head.appendChild(style);
 }
 
-function showAlertToast(a) {
-  injectAlertToastStyles();
+function showToastHtml(html) {
+  injectToastStyles();
   let wrap = document.getElementById('alertToastWrap');
   if (!wrap) {
     wrap = document.createElement('div');
     wrap.id = 'alertToastWrap';
     document.body.appendChild(wrap);
   }
-
-  const sym = String(a.coin || '').toUpperCase();
-  const verb = a.direction === 'above' ? 'rose above' : 'fell below';
-
   const toast = document.createElement('div');
   toast.className = 'alert-toast';
-  toast.innerHTML = `<b>🔔 Price alert</b><br>${sym} ${verb} ${navFmtPrice(a.target)} (now ${navFmtPrice(a.triggered_price)}). <a href="alerts.html">View alerts</a><button class="x" aria-label="Dismiss">×</button>`;
+  toast.innerHTML = html + '<button class="x" aria-label="Dismiss">×</button>';
   toast.querySelector('.x').addEventListener('click', () => toast.remove());
   wrap.appendChild(toast);
   setTimeout(() => toast.remove(), 25000);
 }
 
-async function checkAlertNotifications() {
+function showAlertToast(a) {
+  const sym = escHtmlNav(String(a.coin || '').toUpperCase());
+  const verb = a.direction === 'above' ? 'rose above' : 'fell below';
+  showToastHtml(`<b>🔔 Price alert</b><br>${sym} ${verb} ${navFmtPrice(a.target)} (now ${navFmtPrice(a.triggered_price)}). <a href="alerts.html">View alerts</a>`);
+}
+
+function showOrderToast(o) {
+  const sym = escHtmlNav(String(o.coin || '').toUpperCase());
+  if (o.status === 'filled') {
+    const verb = o.side === 'buy' ? 'Bought' : 'Sold';
+    showToastHtml(`<b>✅ Limit order filled</b><br>${verb} ${navFmtQty(o.fill_qty)} ${sym} at ${navFmtPrice(o.fill_price)}. <a href="orders.html">View orders</a>`);
+  } else {
+    showToastHtml(`<b>⚠️ Limit order cancelled</b><br>Your ${escHtmlNav(o.side)} ${sym} order at ${navFmtPrice(o.limit_price)} could not be filled: ${escHtmlNav(o.note || 'unknown reason')}. <a href="orders.html">View orders</a>`);
+  }
+}
+
+// kind is "alerts" or "orders": fetch what hasn't been shown yet, show it, then mark it as seen
+async function pullUnseen(kind, show) {
   const userId = localStorage.getItem('userId');
   if (!userId || !localStorage.getItem('authToken') || document.hidden) return;
 
   try {
-    const res = await fetch(`${NAV_API}/api/data/${userId}/alerts/unseen`);
+    const res = await fetch(`${NAV_API}/api/data/${userId}/${kind}/unseen`);
     if (!res.ok) return;
     const data = await res.json();
-    if (!data.alerts || !data.alerts.length) return;
+    const list = data[kind] || [];
+    if (!list.length) return;
 
-    data.alerts.forEach(showAlertToast);
-    await fetch(`${NAV_API}/api/data/${userId}/alerts/seen`, {
+    list.forEach(show);
+    await fetch(`${NAV_API}/api/data/${userId}/${kind}/seen`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: data.alerts.map(a => a.id) })
+      body: JSON.stringify({ ids: list.map(x => x.id) })
     });
   } catch (err) {}
 }
 
-let alertWatcherStarted = false;
-function startAlertWatcher() {
-  if (alertWatcherStarted) return;
-  alertWatcherStarted = true;
-  checkAlertNotifications();
-  setInterval(checkAlertNotifications, 60000);
+function checkNotifications() {
+  pullUnseen('alerts', showAlertToast);
+  pullUnseen('orders', showOrderToast);
+}
+
+let notificationWatcherStarted = false;
+function startNotificationWatcher() {
+  if (notificationWatcherStarted) return;
+  notificationWatcherStarted = true;
+  checkNotifications();
+  setInterval(checkNotifications, 60000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) checkAlertNotifications();
+    if (!document.hidden) checkNotifications();
   });
 }
 
