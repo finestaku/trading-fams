@@ -1,5 +1,14 @@
 const NAV_API = 'https://crypto-global-trade-backend.onrender.com';
 
+// ---- LIVE CHAT SETUP (Tidio) ----
+// Paste your Tidio key between the quotes below. It is the 32 letters/numbers in your Tidio install code
+// (the part between "code.tidio.co/" and ".js"). You can also paste the whole Tidio script line.
+const TIDIO_KEY = '';
+
+// ---- WHATSAPP SETUP ----
+// Replace with your real WhatsApp number: country code + number, no spaces, no + sign (example: 2348012345678)
+const WHATSAPP_NUMBER = '15550001234';
+
 // ---- Attach the login token to requests that need it ----
 (function () {
   const originalFetch = window.fetch;
@@ -217,32 +226,106 @@ function startNotificationWatcher() {
 
 document.addEventListener('DOMContentLoaded', initNav);
 
+// ---- Live chat (Tidio) ----
+// Tidio's own chat bubble is hidden, and our 💬 button opens the chat instead, so there is only one chat button.
+// Tidio itself only loads the first time someone taps the button (or hovers over it).
+let tidioState = 'idle'; // idle -> loading -> ready (or failed)
+let tidioOpenWhenReady = false;
+
+function getTidioKey() {
+  const raw = String(TIDIO_KEY || '').trim();
+  const fromScript = raw.match(/code\.tidio\.co\/([A-Za-z0-9]+)/);
+  const key = fromScript ? fromScript[1] : raw;
+  return /^[A-Za-z0-9]{16,64}$/.test(key) ? key : '';
+}
+
+function openTidio() {
+  try {
+    window.tidioChatApi.show();
+    window.tidioChatApi.open();
+  } catch (e) {}
+}
+
+function onTidioReady() {
+  if (tidioState === 'ready') return;
+  tidioState = 'ready';
+
+  try { window.tidioChatApi.setVisitorData({ name: localStorage.getItem('username') || '' }); } catch (e) {}
+  try { window.tidioChatApi.hide(); } catch (e) {}
+
+  // When the visitor closes the chat window, hide Tidio's bubble again so only our 💬 button shows
+  document.addEventListener('tidioChat-close', () => {
+    try { window.tidioChatApi.hide(); } catch (e) {}
+  });
+
+  if (tidioOpenWhenReady) {
+    tidioOpenWhenReady = false;
+    openTidio();
+  }
+}
+
+function loadTidio() {
+  const key = getTidioKey();
+  if (!key || tidioState !== 'idle') return;
+  tidioState = 'loading';
+
+  document.addEventListener('tidioChat-ready', onTidioReady);
+
+  const script = document.createElement('script');
+  script.src = 'https://code.tidio.co/' + key + '.js';
+  script.async = true;
+  script.onload = () => {
+    if (window.tidioChatApi && typeof window.tidioChatApi.on === 'function') {
+      try { window.tidioChatApi.on('ready', onTidioReady); } catch (e) {}
+    }
+  };
+  script.onerror = () => {
+    tidioState = 'failed';
+    tidioOpenWhenReady = false;
+  };
+  document.body.appendChild(script);
+}
+
+function onChatButtonClick() {
+  if (!getTidioKey()) {
+    alert('Live chat is being set up. Please use WhatsApp or the Support page for now.');
+    return;
+  }
+  if (tidioState === 'ready') {
+    openTidio();
+    return;
+  }
+  if (tidioState === 'failed') {
+    alert('Live chat could not load. Please check your connection and try again, or use WhatsApp.');
+    tidioState = 'idle';
+    return;
+  }
+  tidioOpenWhenReady = true;
+  loadTidio();
+}
+
 // ---- Floating support widget (WhatsApp + live chat) ----
 function injectSupportWidget() {
   if (document.getElementById('supportFloat')) return;
-
-  const WHATSAPP_NUMBER = '15550001234'; // TODO: replace with your real WhatsApp business number (country code + number, no spaces or +)
 
   const wrap = document.createElement('div');
   wrap.className = 'support-float';
   wrap.id = 'supportFloat';
   wrap.innerHTML = `
-    <a class="support-btn whatsapp-btn" href="https://wa.me/${WHATSAPP_NUMBER}" target="_blank" title="Chat on WhatsApp">
+    <a class="support-btn whatsapp-btn" href="https://wa.me/${WHATSAPP_NUMBER}" target="_blank" rel="noopener" title="Chat on WhatsApp">
       <svg viewBox="0 0 32 32" width="26" height="26" fill="white">
         <path d="M16 3C9.373 3 4 8.373 4 15c0 2.485.755 4.79 2.05 6.708L4 29l7.47-1.96A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 21.8c-1.93 0-3.72-.56-5.24-1.53l-.376-.235-4.43 1.163 1.18-4.32-.246-.394A9.77 9.77 0 0 1 5.8 15c0-5.632 4.568-10.2 10.2-10.2S26.2 9.368 26.2 15 21.632 24.8 16 24.8zm5.62-7.64c-.31-.155-1.828-.902-2.11-1.005-.283-.103-.489-.155-.695.155-.206.31-.797 1.005-.978 1.212-.18.206-.36.232-.67.077-.31-.155-1.31-.483-2.494-1.538-.922-.822-1.544-1.838-1.725-2.148-.18-.31-.02-.478.136-.632.14-.14.31-.36.464-.54.155-.18.206-.31.31-.516.103-.206.052-.387-.026-.542-.077-.155-.695-1.674-.953-2.293-.251-.603-.506-.522-.695-.532-.18-.008-.387-.01-.593-.01a1.14 1.14 0 0 0-.824.387c-.283.31-1.08 1.056-1.08 2.575s1.106 2.988 1.26 3.194c.155.206 2.177 3.325 5.276 4.663.737.318 1.312.508 1.76.65.74.235 1.412.202 1.944.123.593-.089 1.828-.747 2.086-1.468.258-.72.258-1.34.18-1.468-.077-.13-.283-.206-.593-.36z"/>
       </svg>
     </a>
-    <button class="support-btn chat-btn" id="tidioOpenBtn" title="Live Chat">💬</button>
+    <button class="support-btn chat-btn" id="tidioOpenBtn" title="Live Chat" aria-label="Open live chat">💬</button>
   `;
   document.body.appendChild(wrap);
 
-  document.getElementById('tidioOpenBtn').addEventListener('click', () => {
-    if (window.tidioChatApi) {
-      window.tidioChatApi.open();
-    } else {
-      alert('Live chat isn\'t connected yet — add your Tidio project code to enable it.');
-    }
-  });
+  const chatBtn = document.getElementById('tidioOpenBtn');
+  chatBtn.addEventListener('click', onChatButtonClick);
+  // Start loading chat as soon as someone reaches for the button, so it opens faster
+  chatBtn.addEventListener('mouseenter', loadTidio, { once: true });
+  chatBtn.addEventListener('touchstart', loadTidio, { once: true, passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', injectSupportWidget);
